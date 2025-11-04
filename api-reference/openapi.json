@@ -1,72 +1,73 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
+    "title": "MiPay API",
+    "description": "MiPay - Your universal gateway to Soleaspay. API for processing payments and payouts through MiPay gateway.",
+    "contact": {
+      "name": "MiPay Support",
+      "email": "support@mipay.com"
+    },
     "license": {
-      "name": "MIT"
+      "name": "Proprietary",
+      "url": "https://mipay.com/terms"
     },
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://mipay.com/api/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "https://sandbox.mipay.com/api/v1",
+      "description": "Sandbox server"
     }
   ],
   "security": [
     {
-      "bearerAuth": []
+      "ApiKeyAuth": [],
+      "ApiSecretAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Payments",
+      "description": "Collect payments from customers"
+    },
+    {
+      "name": "Payouts",
+      "description": "Send money to customers"
+    },
+    {
+      "name": "Transactions",
+      "description": "Check transaction status"
+    },
+    {
+      "name": "Balance",
+      "description": "Account balance management"
     }
   ],
   "paths": {
-    "/plants": {
-      "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
+    "/payments/payin": {
       "post": {
-        "description": "Creates a new plant in the store",
+        "tags": ["Payments"],
+        "summary": "Initiate PayIn",
+        "description": "Collect payment from a customer via mobile money. The transaction will be processed through Soleaspay and funds will be credited to your merchant account upon success.",
         "requestBody": {
-          "description": "Plant to add to the store",
+          "description": "Payment details to collect from customer",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "$ref": "#/components/schemas/PayInRequest"
+              },
+              "example": {
+                "amount": 1000,
+                "currency": "XAF",
+                "wallet": "237690000000",
+                "description": "Payment for Order #123",
+                "customer_name": "John Doe",
+                "customer_email": "john@example.com",
+                "callback_url": "https://mipay.com/webhooks/payment"
               }
             }
           },
@@ -74,17 +75,37 @@
         },
         "responses": {
           "200": {
-            "description": "plant response",
+            "description": "Payment initiated successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "$ref": "#/components/schemas/PayInResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "unexpected error",
+            "description": "Bad request - invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {
@@ -96,28 +117,163 @@
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/payouts": {
+      "post": {
+        "tags": ["Payouts"],
+        "summary": "Initiate PayOut",
+        "description": "Send money to a customer via mobile money. The amount will be deducted from your merchant balance immediately.",
+        "requestBody": {
+          "description": "Payout details to send to customer",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayOutRequest"
+              },
+              "example": {
+                "amount": 5000,
+                "currency": "XAF",
+                "wallet": "237690000000",
+                "description": "Refund for Order #456",
+                "customer_name": "Jane Smith"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Payout initiated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayOutResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request or insufficient balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payments/{reference}": {
+      "get": {
+        "tags": ["Transactions"],
+        "summary": "Check Payment Status",
+        "description": "Check the status of a PayIn transaction",
         "parameters": [
           {
-            "name": "id",
+            "name": "reference",
             "in": "path",
-            "description": "ID of plant to delete",
+            "description": "Transaction reference ID",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+              "type": "string"
+            },
+            "example": "MPAYIN_ABC123DEF456"
           }
         ],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
+          "200": {
+            "description": "Transaction status retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionStatus"
+                }
+              }
+            }
           },
-          "400": {
-            "description": "unexpected error",
+          "404": {
+            "description": "Transaction not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payouts/{reference}": {
+      "get": {
+        "tags": ["Transactions"],
+        "summary": "Check Payout Status",
+        "description": "Check the status of a PayOut transaction",
+        "parameters": [
+          {
+            "name": "reference",
+            "in": "path",
+            "description": "Payout reference ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "MPAYOUT_XYZ789GHI123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payout status retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Payout not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/balance": {
+      "get": {
+        "tags": ["Balance"],
+        "summary": "Get Account Balance",
+        "description": "Retrieve current merchant account balance",
+        "responses": {
+          "200": {
+            "description": "Balance retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalanceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid API credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -131,22 +287,41 @@
     }
   },
   "webhooks": {
-    "/plant/webhook": {
+    "/payment/webhook": {
       "post": {
-        "description": "Information about a new plant added to the store",
+        "description": "Receive payment status updates via webhook",
         "requestBody": {
-          "description": "Plant added to the store",
+          "description": "Payment status update",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "type": "object",
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "example": "MPAYIN_ABC123DEF456"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["pending", "success", "failed", "cancelled"],
+                    "example": "success"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "example": 1000
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "Payment completed"
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
+            "description": "Webhook received successfully"
           }
         }
       }
@@ -154,63 +329,255 @@
   },
   "components": {
     "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
+      "PayInRequest": {
         "type": "object",
+        "required": ["amount", "currency", "wallet", "description", "customer_name"],
         "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
+          "amount": {
+            "type": "number",
+            "minimum": 100,
+            "example": 1000,
+            "description": "Amount in smallest currency unit (100 XAF = 1€)"
           },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
+          "currency": {
+            "type": "string",
+            "enum": ["XAF", "USD", "EUR"],
+            "default": "XAF",
+            "example": "XAF"
+          },
+          "wallet": {
+            "type": "string",
+            "description": "Customer mobile money wallet number",
+            "example": "237690000000"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "Payment for Order #123"
+          },
+          "customer_name": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "John Doe"
+          },
+          "customer_email": {
+            "type": "string",
+            "format": "email",
+            "example": "john@example.com"
+          },
+          "callback_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to receive payment status updates",
+            "example": "https://yourapp.com/webhooks/payment"
           }
         }
       },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
+      "PayOutRequest": {
+        "type": "object",
+        "required": ["amount", "currency", "wallet", "description", "customer_name"],
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 100,
+            "example": 5000
           },
-          {
-            "required": [
-              "id"
-            ],
+          "currency": {
+            "type": "string",
+            "enum": ["XAF", "USD", "EUR"],
+            "default": "XAF",
+            "example": "XAF"
+          },
+          "wallet": {
+            "type": "string",
+            "example": "237690000000"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "Refund for Order #456"
+          },
+          "customer_name": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "Jane Smith"
+          }
+        }
+      },
+      "PayInResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Payment initiated successfully"
+          },
+          "data": {
             "type": "object",
             "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
+              "transaction_reference": {
+                "type": "string",
+                "example": "MPAYIN_ABC123DEF456"
+              },
+              "amount": {
+                "type": "number",
+                "example": 1000
+              },
+              "currency": {
+                "type": "string",
+                "example": "XAF"
+              },
+              "status": {
+                "type": "string",
+                "example": "pending"
+              },
+              "payment_url": {
+                "type": "string",
+                "description": "URL to redirect customer for payment",
+                "example": "https://soleaspay.com/pay/SP_123456789"
+              },
+              "soleaspay_reference": {
+                "type": "string",
+                "example": "SP_123456789"
               }
             }
           }
-        ]
+        }
       },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
+      "PayOutResponse": {
         "type": "object",
         "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
+          "success": {
+            "type": "boolean",
+            "example": true
           },
           "message": {
-            "type": "string"
+            "type": "string",
+            "example": "Payout initiated successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "transaction_reference": {
+                "type": "string",
+                "example": "MPAYOUT_XYZ789GHI123"
+              },
+              "amount": {
+                "type": "number",
+                "example": 5000
+              },
+              "currency": {
+                "type": "string",
+                "example": "XAF"
+              },
+              "status": {
+                "type": "string",
+                "example": "pending"
+              },
+              "soleaspay_reference": {
+                "type": "string",
+                "example": "SP_987654321"
+              }
+            }
+          }
+        }
+      },
+      "TransactionStatus": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "reference": {
+                "type": "string",
+                "example": "MPAYIN_ABC123DEF456"
+              },
+              "amount": {
+                "type": "number",
+                "example": 1000
+              },
+              "status": {
+                "type": "string",
+                "enum": ["pending", "success", "failed", "cancelled"],
+                "example": "success"
+              },
+              "description": {
+                "type": "string",
+                "example": "Payment for Order #123"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "BalanceResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "balance": {
+                "type": "number",
+                "example": 150000
+              },
+              "currency": {
+                "type": "string",
+                "example": "XAF"
+              },
+              "merchant_name": {
+                "type": "string",
+                "example": "My Awesome Business"
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Invalid API key"
+          },
+          "error_code": {
+            "type": "string",
+            "example": "INVALID_API_KEY"
           }
         }
       }
     },
     "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY"
+      },
+      "ApiSecretAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-SECRET"
       }
     }
   }
