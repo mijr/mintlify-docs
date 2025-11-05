@@ -1,25 +1,25 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "MiPay API",
-    "description": "MiPay - Your universal gateway to Soleaspay. API for processing payments and payouts through MiPay gateway.",
+    "title": "GetMiPay API",
+    "description": "GetMiPay - Your universal gateway to Soleaspay. API for processing payments and payouts through GetMiPay gateway.",
     "contact": {
-      "name": "MiPay Support",
-      "email": "support@mipay.com"
+      "name": "GetMiPay Support",
+      "email": "support@GetMiPay.com"
     },
     "license": {
       "name": "Proprietary",
-      "url": "https://mipay.com/terms"
+      "url": "https://GetMiPay.com/terms"
     },
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "https://mipay.com/api/v1",
+      "url": "https://GetMiPay.com/api/v1",
       "description": "Production server"
     },
     {
-      "url": "https://sandbox.mipay.com/api/v1",
+      "url": "https://sandbox.GetMiPay.com/api/v1",
       "description": "Sandbox server"
     }
   ],
@@ -67,7 +67,7 @@
                 "description": "Payment for Order #123",
                 "customer_name": "John Doe",
                 "customer_email": "john@example.com",
-                "callback_url": "https://mipay.com/webhooks/payment"
+                "callback_url": "https://GetMiPay.com/webhooks/payment"
               }
             }
           },
