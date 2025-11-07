@@ -17,7 +17,8 @@
             "group": "Getting Started",
             "pages": [
               "index",
-              "quickstart"
+              "quickstart",
+              "webhooks"
             ]
           }
         ]
@@ -33,6 +34,12 @@
             ]
           },
           {
+            "group": "Checks",
+            "pages": [
+              "api-reference/check/check-status"
+            ]
+          } ,
+          {
             "group": "Payouts",
             "pages": [
               "api-reference/payouts/create",
@@ -45,6 +52,7 @@
               "api-reference/account/balance"
             ]
           }
+
         ]
       }
     ],
@@ -52,12 +60,12 @@
       "anchors": [
         {
           "anchor": "Dashboard",
-          "href": "https://GetMiPay.com//merchant/dashboard",
+          "href": "https://getmipay.com/merchant/dashboard",
           "icon": "layout-dashboard"
         },
         {
           "anchor": "Support",
-          "href": "mailto:support@GetMiPay.com",
+          "href": "mailto:support@getmipay.com",
           "icon": "lifebuoy"
         }
       ]
@@ -71,17 +79,17 @@
     "links": [
       {
         "label": "API Status",
-        "href": "https://GetMiPay.com/merchant/api-keys"
+        "href": "https://getmipay.com/merchant/api-keys"
       },
       {
         "label": "Pricing",
-        "href": "https://GetMiPay.com/pricing"
+        "href": "https://getmipay.com/pricing"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Get API Keys",
-      "href": "https://GetMiPay.com/merchant/api-keys"
+      "href": "https://getmipay.com/merchant/api-keys"
     }
   },
   "contextual": {
@@ -98,9 +106,9 @@
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/GetMiPay",
+      "x": "https://x.com/getmipay",
       "github": "https://github.com/mijr",
-      "linkedin": "https://linkedin.com/company/GetMiPay"
+      "linkedin": "https://linkedin.com/company/getmipay"
     }
   }
 }

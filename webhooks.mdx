@@ -1,0 +1,25 @@
+---
+title: Webhooks
+description: Receive real-time payment status updates via webhooks
+---
+
+# Webhooks
+
+GetMiPay webhooks allow you to receive real-time notifications about payment status changes. Configure your webhook URLs in your merchant dashboard to automatically receive updates when transactions are completed or fail.
+
+## Webhook URLs
+
+| Webhook Type | URL | Method |
+|-------------|-----|---------|
+| Success | `https://getmipay.com/webhooks/success` | POST |
+| Failure | `https://getmipay.com/webhooks/failure` | POST |
+| Generic | `https://getmipay.com/webhooks/callback` | POST |
+
+## Webhook Security
+
+Webhooks are sent with the following headers for verification:
+
+```http
+X-GetMiPay-Signature: sha256=...
+X-GetMiPay-Timestamp: 1635724800
+Content-Type: application/json

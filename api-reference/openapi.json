@@ -9,24 +9,23 @@
     },
     "license": {
       "name": "Proprietary",
-      "url": "https://GetMiPay.com/terms"
+      "url": "https://getmipay.com/terms"
     },
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "https://GetMiPay.com/api/v1",
+      "url": "https://getmipay.com/api/v1",
       "description": "Production server"
     },
     {
-      "url": "https://sandbox.GetMiPay.com/api/v1",
+      "url": "https://sandbox.getmepay.com/api/v1",
       "description": "Sandbox server"
     }
   ],
   "security": [
     {
-      "ApiKeyAuth": [],
-      "ApiSecretAuth": []
+      "ApiKeyAuth": []
     }
   ],
   "tags": [
@@ -45,6 +44,10 @@
     {
       "name": "Balance",
       "description": "Account balance management"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Webhook endpoints for payment notifications"
     }
   ],
   "paths": {
@@ -67,7 +70,7 @@
                 "description": "Payment for Order #123",
                 "customer_name": "John Doe",
                 "customer_email": "john@example.com",
-                "callback_url": "https://GetMiPay.com/webhooks/payment"
+                "callback_url": "https://yourapp.com/webhooks/payment"
               }
             }
           },
@@ -183,7 +186,7 @@
           {
             "name": "reference",
             "in": "path",
-            "description": "Transaction reference ID",
+            "description": "Transaction reference ID (order_id or soleaspay_reference)",
             "required": true,
             "schema": {
               "type": "string"
@@ -224,7 +227,7 @@
           {
             "name": "reference",
             "in": "path",
-            "description": "Payout reference ID",
+            "description": "Payout reference ID (order_id or soleaspay_reference)",
             "required": true,
             "schema": {
               "type": "string"
@@ -284,35 +287,204 @@
           }
         }
       }
+    },
+    "/payments/check-status": {
+      "post": {
+        "tags": ["Transactions"],
+        "summary": "Manual Status Check",
+        "description": "Manually check and update transaction status by polling Soleaspay",
+        "requestBody": {
+          "description": "Reference to check",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reference"],
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "description": "Transaction reference (order_id or soleaspay_reference)",
+                    "example": "MPAYIN_ABC123DEF456"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Status checked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transaction_id": {
+                          "type": "integer",
+                          "example": 123
+                        },
+                        "order_id": {
+                          "type": "string",
+                          "example": "MPAYIN_ABC123DEF456"
+                        },
+                        "current_status": {
+                          "type": "string",
+                          "example": "success"
+                        },
+                        "soleaspay_reference": {
+                          "type": "string",
+                          "example": "MLS690d472dd7ee7B"
+                        },
+                        "status_updated": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "webhooks": {
-    "/payment/webhook": {
+    "success": {
       "post": {
-        "description": "Receive payment status updates via webhook",
+        "tags": ["Webhooks"],
+        "description": "Receive payment success notifications",
         "requestBody": {
-          "description": "Payment status update",
+          "description": "Payment success notification",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "reference": {
+                  "order_id": {
                     "type": "string",
                     "example": "MPAYIN_ABC123DEF456"
                   },
+                  "reference": {
+                    "type": "string",
+                    "example": "MLS690d472dd7ee7B"
+                  },
                   "status": {
                     "type": "string",
-                    "enum": ["pending", "success", "failed", "cancelled"],
                     "example": "success"
                   },
                   "amount": {
                     "type": "number",
                     "example": 1000
                   },
-                  "message": {
+                  "currency": {
                     "type": "string",
-                    "example": "Payment completed"
+                    "example": "XAF"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook received successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Webhook processed successfully"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "failure": {
+      "post": {
+        "tags": ["Webhooks"],
+        "description": "Receive payment failure notifications",
+        "requestBody": {
+          "description": "Payment failure notification",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": "string",
+                    "example": "MPAYIN_ABC123DEF456"
+                  },
+                  "reference": {
+                    "type": "string",
+                    "example": "MLS690d472dd7ee7B"
+                  },
+                  "status": {
+                    "type": "string",
+                    "example": "failed"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "example": "Insufficient funds"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook received successfully"
+          }
+        }
+      }
+    },
+    "callback": {
+      "post": {
+        "tags": ["Webhooks"],
+        "description": "Generic webhook endpoint that handles any status",
+        "requestBody": {
+          "description": "Generic payment status notification",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": "string",
+                    "example": "MPAYIN_ABC123DEF456"
+                  },
+                  "reference": {
+                    "type": "string",
+                    "example": "MLS690d472dd7ee7B"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["pending", "success", "failed", "processing"],
+                    "example": "success"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "example": 1000
                   }
                 }
               }
@@ -422,6 +594,10 @@
                 "type": "string",
                 "example": "MPAYIN_ABC123DEF456"
               },
+              "soleaspay_reference": {
+                "type": "string",
+                "example": "MLS690d472dd7ee7B"
+              },
               "amount": {
                 "type": "number",
                 "example": 1000
@@ -436,12 +612,21 @@
               },
               "payment_url": {
                 "type": "string",
-                "description": "URL to redirect customer for payment",
-                "example": "https://soleaspay.com/pay/SP_123456789"
+                "description": "URL to redirect customer for payment (if applicable)",
+                "example": "https://soleaspay.com/pay/MLS690d472dd7ee7B"
               },
-              "soleaspay_reference": {
-                "type": "string",
-                "example": "SP_123456789"
+              "webhook_urls": {
+                "type": "object",
+                "properties": {
+                  "success": {
+                    "type": "string",
+                    "example": "https://GetMiPay.com/api/webhooks/success"
+                  },
+                  "failure": {
+                    "type": "string",
+                    "example": "https://GetMiPay.com/api/webhooks/failure"
+                  }
+                }
               }
             }
           }
@@ -465,6 +650,10 @@
                 "type": "string",
                 "example": "MPAYOUT_XYZ789GHI123"
               },
+              "soleaspay_reference": {
+                "type": "string",
+                "example": "MLS690d472dd7ee7C"
+              },
               "amount": {
                 "type": "number",
                 "example": 5000
@@ -476,10 +665,6 @@
               "status": {
                 "type": "string",
                 "example": "pending"
-              },
-              "soleaspay_reference": {
-                "type": "string",
-                "example": "SP_987654321"
               }
             }
           }
@@ -499,13 +684,21 @@
                 "type": "string",
                 "example": "MPAYIN_ABC123DEF456"
               },
+              "soleaspay_reference": {
+                "type": "string",
+                "example": "MLS690d472dd7ee7B"
+              },
               "amount": {
                 "type": "number",
                 "example": 1000
               },
+              "currency": {
+                "type": "string",
+                "example": "XAF"
+              },
               "status": {
                 "type": "string",
-                "enum": ["pending", "success", "failed", "cancelled"],
+                "enum": ["pending", "success", "failed", "timeout"],
                 "example": "success"
               },
               "description": {
@@ -517,6 +710,14 @@
                 "format": "date-time"
               },
               "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "polling_attempts": {
+                "type": "integer",
+                "example": 5
+              },
+              "last_polling_at": {
                 "type": "string",
                 "format": "date-time"
               }
@@ -573,11 +774,6 @@
         "type": "apiKey",
         "in": "header",
         "name": "X-API-KEY"
-      },
-      "ApiSecretAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-API-SECRET"
       }
     }
   }
