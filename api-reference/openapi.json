@@ -5,7 +5,7 @@
     "description": "GetMiPay - Your universal gateway to Soleaspay. API for processing payments and payouts through GetMiPay gateway.",
     "contact": {
       "name": "GetMiPay Support",
-      "email": "support@GetMiPay.com"
+      "email": "support@getmipay.com"
     },
     "license": {
       "name": "Proprietary",
@@ -30,6 +30,10 @@
   ],
   "tags": [
     {
+      "name": "Services",
+      "description": "Get available payment services"
+    },
+    {
       "name": "Payments",
       "description": "Collect payments from customers"
     },
@@ -51,11 +55,73 @@
     }
   ],
   "paths": {
+    "/services": {
+      "get": {
+        "tags": ["Services"],
+        "summary": "Get Available Services",
+        "description": "Retrieve all available payment services activated for your merchant account. These are the services you can use for PayIn and PayOut operations.",
+        "responses": {
+          "200": {
+            "description": "Services retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Merchant account not active or KYC not approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/payments/payin": {
       "post": {
         "tags": ["Payments"],
         "summary": "Initiate PayIn",
         "description": "Collect payment from a customer via mobile money. The transaction will be processed through Soleaspay and funds will be credited to your merchant account upon success.",
+        "parameters": [
+          {
+            "name": "operation",
+            "in": "header",
+            "description": "Operation type - must be '2' for PayIn",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["2"],
+              "example": "2"
+            }
+          },
+          {
+            "name": "service",
+            "in": "header",
+            "description": "Service identifier for the payment method",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1"
+            }
+          }
+        ],
         "requestBody": {
           "description": "Payment details to collect from customer",
           "content": {
@@ -125,6 +191,29 @@
         "tags": ["Payouts"],
         "summary": "Initiate PayOut",
         "description": "Send money to a customer via mobile money. The amount will be deducted from your merchant balance immediately.",
+        "parameters": [
+          {
+            "name": "operation",
+            "in": "header",
+            "description": "Operation type - must be '4' for PayOut",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["4"],
+              "example": "4"
+            }
+          },
+          {
+            "name": "service",
+            "in": "header",
+            "description": "Service identifier for the payment method",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1"
+            }
+          }
+        ],
         "requestBody": {
           "description": "Payout details to send to customer",
           "content": {
@@ -501,6 +590,143 @@
   },
   "components": {
     "schemas": {
+      "ServicesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Services retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "all_services": {
+                "type": "array",
+                "description": "All active services for the merchant",
+                "items": {
+                  "$ref": "#/components/schemas/Service"
+                }
+              },
+              "services_by_country": {
+                "type": "object",
+                "description": "Services grouped by country code",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Service"
+                  }
+                }
+              },
+              "payin_services": {
+                "type": "array",
+                "description": "Services that support PayIn (deposits)",
+                "items": {
+                  "$ref": "#/components/schemas/Service"
+                }
+              },
+              "payout_services": {
+                "type": "array",
+                "description": "Services that support PayOut (withdrawals)",
+                "items": {
+                  "$ref": "#/components/schemas/Service"
+                }
+              },
+              "total_services": {
+                "type": "integer",
+                "example": 5,
+                "description": "Total number of active services"
+              },
+              "total_payin_services": {
+                "type": "integer",
+                "example": 3,
+                "description": "Total number of PayIn services"
+              },
+              "total_payout_services": {
+                "type": "integer",
+                "example": 2,
+                "description": "Total number of PayOut services"
+              },
+              "merchant_info": {
+                "type": "object",
+                "properties": {
+                  "merchant_id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "business_name": {
+                    "type": "string",
+                    "example": "My Awesome Business"
+                  },
+                  "balance": {
+                    "type": "number",
+                    "example": 150000
+                  },
+                  "currency": {
+                    "type": "string",
+                    "example": "XAF"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Service": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Service identifier to use in PayIn/PayOut headers",
+            "example": "1"
+          },
+          "name": {
+            "type": "string",
+            "example": "MOMO CM"
+          },
+          "description": {
+            "type": "string",
+            "example": "MTN MOBILE MONEY CM"
+          },
+          "country_code": {
+            "type": "string",
+            "example": "CM"
+          },
+          "country_name": {
+            "type": "string",
+            "example": "CAMEROON"
+          },
+          "withdrawable": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether this service supports PayOut operations"
+          },
+          "depositable": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether this service supports PayIn operations"
+          },
+          "is_active": {
+            "type": "boolean",
+            "example": true
+          },
+          "currency": {
+            "type": "string",
+            "example": "XAF"
+          },
+          "min_amount": {
+            "type": "number",
+            "example": 100
+          },
+          "max_amount": {
+            "type": "number",
+            "example": 1000000
+          }
+        }
+      },
       "PayInRequest": {
         "type": "object",
         "required": ["amount", "currency", "wallet", "description", "customer_name"],
