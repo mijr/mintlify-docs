@@ -98,7 +98,7 @@
         }
       }
     },
-     "/convert-currency": {
+    "/convert-currency": {
       "get": {
         "tags": ["Currency"],
         "summary": "Convert Currency",
@@ -110,6 +110,7 @@
             "required": true,
             "schema": {
               "type": "number",
+              "minimum": 0.01,
               "example": 100
             },
             "description": "The amount to convert."
@@ -120,6 +121,7 @@
             "required": true,
             "schema": {
               "type": "string",
+              "pattern": "^[A-Z]{3}$",
               "example": "XOF"
             },
             "description": "The source currency code (ISO 4217)."
@@ -130,33 +132,33 @@
             "required": true,
             "schema": {
               "type": "string",
+              "pattern": "^[A-Z]{3}$",
               "example": "XAF"
             },
             "description": "The target currency code (ISO 4217)."
           }
         ],
         "responses": {
-            "200": {
-          "description": "Conversion successful",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CurrencyConversionResponse"
-              },
-              "example": {
-                "success": true,
-                "data": {
-                  "from_currency": "XOF",
-                  "to_currency": "XAF",
-                  "amount": 100,
-                  "converted_amount": 100,
-                  "rate": 1,
-                  "timestamp": "2025-11-12T10:30:00Z"
+          "200": {
+            "description": "Conversion successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrencyConversionResponse"
                 }
               }
             }
-          }
-        },
+          },
+          "400": {
+            "description": "Bad request - invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized - Invalid API credentials",
             "content": {
@@ -214,15 +216,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PayInRequest"
-              },
-              "example": {
-                "amount": 1000,
-                "currency": "XAF",
-                "wallet": "237690000000",
-                "description": "Payment for Order #123",
-                "customer_name": "John Doe",
-                "customer_email": "john@example.com",
-                "callback_url": "https://yourapp.com/webhooks/payment"
               }
             }
           },
@@ -306,13 +299,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PayOutRequest"
-              },
-              "example": {
-                "amount": 5000,
-                "currency": "XAF",
-                "wallet": "237690000000",
-                "description": "Refund for Order #456",
-                "customer_name": "Jane Smith"
               }
             }
           },
@@ -531,6 +517,66 @@
           }
         }
       }
+    },
+    "/payments/direct-status": {
+      "post": {
+        "tags": ["Transactions"],
+        "summary": "Direct Status Check",
+        "description": "Directly check transaction status with Soleaspay using both order ID and payment reference",
+        "requestBody": {
+          "description": "Transaction identifiers for direct status check",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Direct status check successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectStatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing or invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "webhooks": {
@@ -543,29 +589,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "order_id": {
-                    "type": "string",
-                    "example": "MPAYIN_ABC123DEF456"
-                  },
-                  "reference": {
-                    "type": "string",
-                    "example": "MLS690d472dd7ee7B"
-                  },
-                  "status": {
-                    "type": "string",
-                    "example": "success"
-                  },
-                  "amount": {
-                    "type": "number",
-                    "example": 1000
-                  },
-                  "currency": {
-                    "type": "string",
-                    "example": "XAF"
-                  }
-                }
+                "$ref": "#/components/schemas/WebhookSuccess"
               }
             }
           }
@@ -603,25 +627,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "order_id": {
-                    "type": "string",
-                    "example": "MPAYIN_ABC123DEF456"
-                  },
-                  "reference": {
-                    "type": "string",
-                    "example": "MLS690d472dd7ee7B"
-                  },
-                  "status": {
-                    "type": "string",
-                    "example": "failed"
-                  },
-                  "reason": {
-                    "type": "string",
-                    "example": "Insufficient funds"
-                  }
-                }
+                "$ref": "#/components/schemas/WebhookFailure"
               }
             }
           }
@@ -642,26 +648,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "order_id": {
-                    "type": "string",
-                    "example": "MPAYIN_ABC123DEF456"
-                  },
-                  "reference": {
-                    "type": "string",
-                    "example": "MLS690d472dd7ee7B"
-                  },
-                  "status": {
-                    "type": "string",
-                    "enum": ["pending", "success", "failed", "processing"],
-                    "example": "success"
-                  },
-                  "amount": {
-                    "type": "number",
-                    "example": 1000
-                  }
-                }
+                "$ref": "#/components/schemas/WebhookCallback"
               }
             }
           }
@@ -814,15 +801,8 @@
         }
       },
       "CurrencyConversionResponse": {
-  "type": "object",
-  "properties": {
-    "success": {
-      "type": "boolean",
-      "example": true
-    },
-    "data": {
-      "type": "object",
-      "properties": {
+        "type": "object",
+        "properties": {
           "success": {
             "type": "boolean",
             "example": true
@@ -832,33 +812,39 @@
             "properties": {
               "from_currency": {
                 "type": "string",
-                "example": "XOF"
+                "example": "XOF",
+                "description": "The currency code being converted from"
               },
               "to_currency": {
                 "type": "string",
-                "example": "XAF"
+                "example": "XAF",
+                "description": "The currency code being converted to"
               },
               "amount": {
                 "type": "number",
-                "example": 100
+                "example": 100,
+                "description": "The original amount before conversion"
               },
               "converted_amount": {
                 "type": "number",
-                "example": 100
+                "example": 100,
+                "description": "The converted amount after applying the rate"
               },
               "rate": {
                 "type": "number",
-                "example": 1
+                "example": 1,
+                "description": "The exchange rate applied between the two currencies"
               },
               "timestamp": {
                 "type": "string",
                 "format": "date-time",
-                "example": "2025-11-12T10:30:00Z"
+                "example": "2025-11-12T10:30:00Z",
+                "description": "The UTC timestamp when the conversion rate was fetched"
               }
-      }
-    }
-  }
-},
+            }
+          }
+        }
+      },
       "PayInRequest": {
         "type": "object",
         "required": ["amount", "currency", "wallet", "description", "customer_name"],
@@ -978,11 +964,11 @@
                 "properties": {
                   "success": {
                     "type": "string",
-                    "example": "https://GetMiPay.com/api/webhooks/success"
+                    "example": "https://getmipay.com/api/webhooks/success"
                   },
                   "failure": {
                     "type": "string",
-                    "example": "https://GetMiPay.com/api/webhooks/failure"
+                    "example": "https://getmipay.com/api/webhooks/failure"
                   }
                 }
               }
@@ -1083,6 +1069,72 @@
           }
         }
       },
+      "DirectStatusRequest": {
+        "type": "object",
+        "required": ["order_id", "pay_id"],
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "Your unique order ID",
+            "example": "MPAYIN_ABC123DEF456"
+          },
+          "pay_id": {
+            "type": "string",
+            "description": "Soleaspay payment reference (received from Pay-In API)",
+            "example": "MLS690d472dd7ee7B"
+          },
+          "operation": {
+            "type": "string",
+            "description": "Optional operation header",
+            "example": "2"
+          },
+          "service": {
+            "type": "string",
+            "description": "Optional service header",
+            "example": "1"
+          }
+        }
+      },
+      "DirectStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "order_id": {
+                "type": "string",
+                "example": "MPAYIN_ABC123DEF456"
+              },
+              "pay_id": {
+                "type": "string",
+                "example": "MLS690d472dd7ee7B"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["pending", "success", "failed", "processing"],
+                "example": "success"
+              },
+              "amount": {
+                "type": "number",
+                "example": 1000
+              },
+              "currency": {
+                "type": "string",
+                "example": "XAF"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-12-16T10:05:01Z"
+              }
+            }
+          }
+        }
+      },
       "BalanceResponse": {
         "type": "object",
         "properties": {
@@ -1106,6 +1158,74 @@
                 "example": "My Awesome Business"
               }
             }
+          }
+        }
+      },
+      "WebhookSuccess": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "example": "MPAYIN_ABC123DEF456"
+          },
+          "reference": {
+            "type": "string",
+            "example": "MLS690d472dd7ee7B"
+          },
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1000
+          },
+          "currency": {
+            "type": "string",
+            "example": "XAF"
+          }
+        }
+      },
+      "WebhookFailure": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "example": "MPAYIN_ABC123DEF456"
+          },
+          "reference": {
+            "type": "string",
+            "example": "MLS690d472dd7ee7B"
+          },
+          "status": {
+            "type": "string",
+            "example": "failed"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Insufficient funds"
+          }
+        }
+      },
+      "WebhookCallback": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "example": "MPAYIN_ABC123DEF456"
+          },
+          "reference": {
+            "type": "string",
+            "example": "MLS690d472dd7ee7B"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "success", "failed", "processing"],
+            "example": "success"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1000
           }
         }
       },
