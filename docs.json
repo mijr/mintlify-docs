@@ -57,6 +57,12 @@
             "pages": [
               "api-reference/account/balance"
             ]
+          },
+          {
+            "group": "Utils",
+            "pages": [
+              "api-reference/converter/converter"
+            ]
           }
 
         ]

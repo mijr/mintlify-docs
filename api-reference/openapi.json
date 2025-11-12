@@ -34,6 +34,10 @@
       "description": "Get available payment services"
     },
     {
+      "name": "Currency",
+      "description": "API for converting amounts between different currencies."
+    },
+    {
       "name": "Payments",
       "description": "Collect payments from customers"
     },
@@ -71,6 +75,88 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - Invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Merchant account not active or KYC not approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+     "/convert-currency": {
+      "get": {
+        "tags": ["Currency"],
+        "summary": "Convert Currency",
+        "description": "Convert an amount from one currency to another using ISO 4217 currency codes.",
+        "parameters": [
+          {
+            "name": "amount",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 100
+            },
+            "description": "The amount to convert."
+          },
+          {
+            "name": "from_currency",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "XOF"
+            },
+            "description": "The source currency code (ISO 4217)."
+          },
+          {
+            "name": "to_currency",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "XAF"
+            },
+            "description": "The target currency code (ISO 4217)."
+          }
+        ],
+        "responses": {
+            "200": {
+          "description": "Conversion successful",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrencyConversionResponse"
+              },
+              "example": {
+                "success": true,
+                "data": {
+                  "from_currency": "XOF",
+                  "to_currency": "XAF",
+                  "amount": 100,
+                  "converted_amount": 100,
+                  "rate": 1,
+                  "timestamp": "2025-11-12T10:30:00Z"
+                }
+              }
+            }
+          }
+        },
           "401": {
             "description": "Unauthorized - Invalid API credentials",
             "content": {
@@ -727,6 +813,52 @@
           }
         }
       },
+      "CurrencyConversionResponse": {
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "example": true
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "from_currency": {
+                "type": "string",
+                "example": "XOF"
+              },
+              "to_currency": {
+                "type": "string",
+                "example": "XAF"
+              },
+              "amount": {
+                "type": "number",
+                "example": 100
+              },
+              "converted_amount": {
+                "type": "number",
+                "example": 100
+              },
+              "rate": {
+                "type": "number",
+                "example": 1
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-11-12T10:30:00Z"
+              }
+      }
+    }
+  }
+},
       "PayInRequest": {
         "type": "object",
         "required": ["amount", "currency", "wallet", "description", "customer_name"],
