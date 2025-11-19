@@ -35,7 +35,8 @@
           {
             "group": "Auth",
             "pages": [
-              "api-reference/auth/auth"
+              "api-reference/auth/auth",
+               "api-reference/auth/check"
             ]
           },
           {
@@ -54,6 +55,14 @@
                "api-reference/virtualCard/createCard",
                 "api-reference/virtualCard/fetchCard",
                  "api-reference/virtualCard/cardUser",
+                  "api-reference/virtualCard/transaction",
+                   "api-reference/virtualCard/balance",
+                "api-reference/virtualCard/topUp",
+                  "api-reference/virtualCard/withdraw",
+                  "api-reference/virtualCard/enable",
+                    "api-reference/virtualCard/disable",
+                    "api-reference/virtualCard/terminate",
+                      "api-reference/virtualCard/operation",
                   "api-reference/virtualCard/transaction"
             ]
           },

@@ -30,6 +30,10 @@
   ],
   "tags": [
     {
+      "name": "Authentication",
+      "description": "API authentication and token management"
+    },
+    {
       "name": "Services",
       "description": "Get available payment services"
     },
@@ -63,11 +67,218 @@
     }
   ],
   "paths": {
+    "/action/auth": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Authenticate for Virtual Cards",
+        "description": "Authenticate with getmipay to get tokens for virtual card operations. This endpoint requires API key authentication.",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Authentication credentials",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["public_apikey", "private_secretkey"],
+                "properties": {
+                  "public_apikey": {
+                    "type": "string",
+                    "description": "The public API key for authentication",
+                    "example": "pk_1234567890abcdef"
+                  },
+                  "private_secretkey": {
+                    "type": "string",
+                    "description": "The secret key for authentication",
+                    "example": "sk_1234567890abcdef"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VirtualCardAuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action/check-api-key": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Check API Key Status",
+        "description": "Check the status and validity of an API key without full authentication.",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "API key to check",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["public_apikey"],
+                "properties": {
+                  "public_apikey": {
+                    "type": "string",
+                    "description": "The public API key to check",
+                    "example": "pk_1234567890abcdef"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "API key status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "api_key": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "key": {
+                              "type": "string",
+                              "example": "pk_1234567890abcdef"
+                            },
+                            "status": {
+                              "type": "string",
+                              "example": "active"
+                            },
+                            "is_active": {
+                              "type": "boolean",
+                              "example": true
+                            },
+                            "activated_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "last_used_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "has_been_rotated": {
+                              "type": "boolean",
+                              "example": false
+                            },
+                            "rotation_count": {
+                              "type": "integer",
+                              "example": 0
+                            }
+                          }
+                        },
+                        "merchant": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "business_name": {
+                              "type": "string",
+                              "example": "My Business"
+                            },
+                            "kyc_status": {
+                              "type": "string",
+                              "example": "approved"
+                            },
+                            "kyc_status_label": {
+                              "type": "string",
+                              "example": "Approved"
+                            },
+                            "status": {
+                              "type": "string",
+                              "example": "active"
+                            },
+                            "is_active": {
+                              "type": "boolean",
+                              "example": true
+                            },
+                            "can_transact": {
+                              "type": "boolean",
+                              "example": true
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "API key not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/services": {
       "get": {
         "tags": ["Services"],
         "summary": "Get Available Services",
         "description": "Retrieve all available payment services activated for your merchant account. These are the services you can use for PayIn and PayOut operations.",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Services retrieved successfully",
@@ -107,6 +318,11 @@
         "tags": ["Currency"],
         "summary": "Convert Currency",
         "description": "Convert an amount from one currency to another using ISO 4217 currency codes.",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "amount",
@@ -191,6 +407,11 @@
         "tags": ["Payments"],
         "summary": "Initiate PayIn",
         "description": "Collect payment from a customer via mobile money. The transaction will be processed through getmipay and funds will be credited to your merchant account upon success.",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "operation",
@@ -274,6 +495,11 @@
         "tags": ["Payouts"],
         "summary": "Initiate PayOut",
         "description": "Send money to a customer via mobile money. The amount will be deducted from your merchant balance immediately.",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "operation",
@@ -347,6 +573,11 @@
         "tags": ["Transactions"],
         "summary": "Check Payment Status",
         "description": "Check the status of a PayIn transaction",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "reference",
@@ -388,6 +619,11 @@
         "tags": ["Transactions"],
         "summary": "Check Payout Status",
         "description": "Check the status of a PayOut transaction",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "reference",
@@ -429,6 +665,11 @@
         "tags": ["Balance"],
         "summary": "Get Account Balance",
         "description": "Retrieve current merchant account balance",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Balance retrieved successfully",
@@ -458,6 +699,11 @@
         "tags": ["Transactions"],
         "summary": "Manual Status Check",
         "description": "Manually check and update transaction status by polling getmipay",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "requestBody": {
           "description": "Reference to check",
           "content": {
@@ -527,6 +773,11 @@
         "tags": ["Transactions"],
         "summary": "Direct Status Check",
         "description": "Directly check transaction status with getmipay using both order ID and payment reference",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "requestBody": {
           "description": "Transaction identifiers for direct status check",
           "content": {
@@ -582,84 +833,15 @@
         }
       }
     },
-    "/action/auth": {
-      "post": {
-        "tags": ["Virtual Cards"],
-        "summary": "Authenticate for Virtual Cards",
-        "description": "Authenticate with getmipay to get tokens for virtual card operations",
-        "requestBody": {
-          "description": "Authentication credentials",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["public_apikey", "private_secretkey"],
-                "properties": {
-                  "public_apikey": {
-                    "type": "string",
-                    "description": "The X-API-KEY for authentication",
-                    "example": "pk_1234567890abcdef"
-                  },
-                  "private_secretkey": {
-                    "type": "string",
-                    "description": "The secret key for authentication",
-                    "example": "sk_1234567890abcdef"
-                  }
-                }
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Authentication successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VirtualCardAuthResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Invalid credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/action/card/user": {
+    "/virtual-cards/action/card/user": {
       "post": {
         "tags": ["Virtual Cards"],
         "summary": "Create Card User",
         "description": "Create a new user for virtual card operations",
-        "parameters": [
+        "security": [
           {
-            "name": "Authorization",
-            "in": "header",
-            "description": "Bearer token from authentication",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-          },
-          {
-            "name": "x-sp-auth-token",
-            "in": "header",
-            "description": "getmipay authentication token",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
+            "ApiKeyAuth": [],
+            "BearerAuth": []
           }
         ],
         "requestBody": {
@@ -710,26 +892,10 @@
         "tags": ["Virtual Cards"],
         "summary": "Get All Card Users",
         "description": "Retrieve list of all virtual card users",
-        "parameters": [
+        "security": [
           {
-            "name": "Authorization",
-            "in": "header",
-            "description": "Bearer token from authentication",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-          },
-          {
-            "name": "x-sp-auth-token",
-            "in": "header",
-            "description": "getmipay authentication token",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
+            "ApiKeyAuth": [],
+            "BearerAuth": []
           }
         ],
         "responses": {
@@ -756,32 +922,18 @@
         }
       }
     },
-    "/action/card/user/{reference}": {
+    "/virtual-cards/users/{reference}": {
       "get": {
         "tags": ["Virtual Cards"],
         "summary": "Get Card User",
         "description": "Retrieve a specific virtual card user by reference",
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
         "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "Bearer token from authentication",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-          },
-          {
-            "name": "x-sp-auth-token",
-            "in": "header",
-            "description": "getmipay authentication token",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-          },
           {
             "name": "reference",
             "in": "path",
@@ -817,32 +969,18 @@
         }
       }
     },
-    "/action/card/{userId}": {
+    "/virtual-cards/action/card/{userId}": {
       "post": {
         "tags": ["Virtual Cards"],
         "summary": "Create Virtual Card",
         "description": "Create a new virtual card for a specific user",
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
         "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "Bearer token from authentication",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-          },
-          {
-            "name": "x-sp-auth-token",
-            "in": "header",
-            "description": "getmipay authentication token",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-          },
           {
             "name": "userId",
             "in": "path",
@@ -899,34 +1037,20 @@
         }
       }
     },
-    "/action/card/{id}": {
+    "/virtual-cards/action/card/{id}": {
       "get": {
         "tags": ["Virtual Cards"],
         "summary": "Get Virtual Card",
         "description": "Retrieve virtual card details by card ID",
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
         "parameters": [
           {
-            "name": "Authorization",
-            "in": "header",
-            "description": "Bearer token from authentication",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-          },
-          {
-            "name": "x-sp-auth-token",
-            "in": "header",
-            "description": "getmipay authentication token",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-          },
-          {
-            "name": "cardId",
+            "name": "id",
             "in": "path",
             "description": "Virtual card ID",
             "required": true,
@@ -960,32 +1084,18 @@
         }
       }
     },
-    "/action/card/transaction/{id}": {
+    "/virtual-cards/cards/{cardId}/balance": {
       "get": {
         "tags": ["Virtual Cards"],
-        "summary": "Card Operations",
-        "description": "Perform operations on virtual card (topup, withdraw, enable/disable, get transactions, terminate)",
+        "summary": "Get Card Balance",
+        "description": "Retrieve the current balance of a virtual card",
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
         "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "Bearer token from authentication",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-          },
-          {
-            "name": "x-sp-auth-token",
-            "in": "header",
-            "description": "getmipay authentication token",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-          },
           {
             "name": "cardId",
             "in": "path",
@@ -995,41 +1105,367 @@
               "type": "string",
               "example": "CARD_123456"
             }
-          },
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balance retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "card_id": {
+                          "type": "string",
+                          "example": "CARD_123456"
+                        },
+                        "balance": {
+                          "type": "number",
+                          "example": 50.00
+                        },
+                        "currency": {
+                          "type": "string",
+                          "example": "USD"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/virtual-cards/cards/{cardId}/topup": {
+      "post": {
+        "tags": ["Virtual Cards"],
+        "summary": "Top Up Card",
+        "description": "Add funds to a virtual card",
+        "security": [
           {
-            "name": "action",
-            "in": "query",
-            "description": "Operation to perform",
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "description": "Virtual card ID",
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["topup", "withdraw", "disabled", "enabled", "transactions", "terminate"],
-              "example": "topup"
-            }
-          },
-          {
-            "name": "currency",
-            "in": "query",
-            "description": "Currency for amount operations",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": ["USD", "EUR", "XAF"],
-              "example": "USD"
-            }
-          },
-          {
-            "name": "amount",
-            "in": "query",
-            "description": "Amount for topup/withdraw operations",
-            "required": false,
-            "schema": {
-              "type": "number",
-              "minimum": 0.01,
-              "example": 10
+              "example": "CARD_123456"
             }
           }
         ],
+        "requestBody": {
+          "description": "Top-up details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount", "currency"],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "example": 50.00
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": ["USD", "EUR", "XAF"],
+                    "example": "USD"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Card topped up successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardOperationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/virtual-cards/cards/{cardId}/withdraw": {
+      "post": {
+        "tags": ["Virtual Cards"],
+        "summary": "Withdraw from Card",
+        "description": "Withdraw funds from a virtual card",
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "description": "Virtual card ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CARD_123456"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Withdrawal details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount", "currency"],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "example": 20.00
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": ["USD", "EUR", "XAF"],
+                    "example": "USD"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Withdrawal successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardOperationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/virtual-cards/cards/{cardId}/enable": {
+      "post": {
+        "tags": ["Virtual Cards"],
+        "summary": "Enable Card",
+        "description": "Enable a disabled virtual card",
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "description": "Virtual card ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CARD_123456"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Card enabled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardOperationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/virtual-cards/cards/{cardId}/disable": {
+      "post": {
+        "tags": ["Virtual Cards"],
+        "summary": "Disable Card",
+        "description": "Disable a virtual card",
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "description": "Virtual card ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CARD_123456"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Card disabled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardOperationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/virtual-cards/action/card/transaction/{id}": {
+      "get": {
+        "tags": ["Virtual Cards"],
+        "summary": "Get Card Transactions",
+        "description": "Retrieve transaction history for a virtual card",
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Card ID or transaction ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CARD_123456"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transactions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardOperationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/virtual-cards/cards/{cardId}": {
+      "delete": {
+        "tags": ["Virtual Cards"],
+        "summary": "Terminate Card",
+        "description": "Permanently terminate a virtual card",
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "description": "Virtual card ID to terminate",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CARD_123456"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Card terminated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardOperationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/virtual-cards/cards/{cardId}/operation": {
+      "post": {
+        "tags": ["Virtual Cards"],
+        "summary": "Card Operation",
+        "description": "Perform generic operations on virtual card",
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "description": "Virtual card ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CARD_123456"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Operation details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": ["topup", "withdraw", "enable", "disable", "get_balance", "get_transactions"],
+                    "example": "topup"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "example": 50.00
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": ["USD", "EUR", "XAF"],
+                    "example": "USD"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Operation completed successfully",
@@ -1040,108 +1476,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad request - invalid operation parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Invalid token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "webhooks": {
-    "success": {
-      "post": {
-        "tags": ["Webhooks"],
-        "description": "Receive payment success notifications",
-        "requestBody": {
-          "description": "Payment success notification",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WebhookSuccess"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Webhook received successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Webhook processed successfully"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "failure": {
-      "post": {
-        "tags": ["Webhooks"],
-        "description": "Receive payment failure notifications",
-        "requestBody": {
-          "description": "Payment failure notification",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WebhookFailure"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Webhook received successfully"
-          }
-        }
-      }
-    },
-    "callback": {
-      "post": {
-        "tags": ["Webhooks"],
-        "description": "Generic webhook endpoint that handles any status",
-        "requestBody": {
-          "description": "Generic payment status notification",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WebhookCallback"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Webhook received successfully"
           }
         }
       }
