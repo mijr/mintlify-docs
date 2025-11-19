@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "GetMiPay API",
-    "description": "GetMiPay - Your universal gateway to Soleaspay. API for processing payments and payouts through GetMiPay gateway.",
+    "description": "GetMiPay - Your universal gateway to getmipay. API for processing payments, payouts, and virtual cards through GetMiPay gateway.",
     "contact": {
       "name": "GetMiPay Support",
       "email": "support@getmipay.com"
@@ -11,7 +11,7 @@
       "name": "Proprietary",
       "url": "https://getmipay.com/terms"
     },
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "servers": [
     {
@@ -52,6 +52,10 @@
     {
       "name": "Balance",
       "description": "Account balance management"
+    },
+    {
+      "name": "Virtual Cards",
+      "description": "Virtual card creation and management"
     },
     {
       "name": "Webhooks",
@@ -186,7 +190,7 @@
       "post": {
         "tags": ["Payments"],
         "summary": "Initiate PayIn",
-        "description": "Collect payment from a customer via mobile money. The transaction will be processed through Soleaspay and funds will be credited to your merchant account upon success.",
+        "description": "Collect payment from a customer via mobile money. The transaction will be processed through getmipay and funds will be credited to your merchant account upon success.",
         "parameters": [
           {
             "name": "operation",
@@ -453,7 +457,7 @@
       "post": {
         "tags": ["Transactions"],
         "summary": "Manual Status Check",
-        "description": "Manually check and update transaction status by polling Soleaspay",
+        "description": "Manually check and update transaction status by polling getmipay",
         "requestBody": {
           "description": "Reference to check",
           "content": {
@@ -522,7 +526,7 @@
       "post": {
         "tags": ["Transactions"],
         "summary": "Direct Status Check",
-        "description": "Directly check transaction status with Soleaspay using both order ID and payment reference",
+        "description": "Directly check transaction status with getmipay using both order ID and payment reference",
         "requestBody": {
           "description": "Transaction identifiers for direct status check",
           "content": {
@@ -567,6 +571,488 @@
           },
           "500": {
             "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action/auth": {
+      "post": {
+        "tags": ["Virtual Cards"],
+        "summary": "Authenticate for Virtual Cards",
+        "description": "Authenticate with getmipay to get tokens for virtual card operations",
+        "requestBody": {
+          "description": "Authentication credentials",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["public_apikey", "private_secretkey"],
+                "properties": {
+                  "public_apikey": {
+                    "type": "string",
+                    "description": "The X-API-KEY for authentication",
+                    "example": "pk_1234567890abcdef"
+                  },
+                  "private_secretkey": {
+                    "type": "string",
+                    "description": "The secret key for authentication",
+                    "example": "sk_1234567890abcdef"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VirtualCardAuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action/card/user": {
+      "post": {
+        "tags": ["Virtual Cards"],
+        "summary": "Create Card User",
+        "description": "Create a new user for virtual card operations",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Bearer token from authentication",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          },
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "description": "getmipay authentication token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "User creation details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid user data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Virtual Cards"],
+        "summary": "Get All Card Users",
+        "description": "Retrieve list of all virtual card users",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Bearer token from authentication",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          },
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "description": "getmipay authentication token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardUsersListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action/card/user/{reference}": {
+      "get": {
+        "tags": ["Virtual Cards"],
+        "summary": "Get Card User",
+        "description": "Retrieve a specific virtual card user by reference",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Bearer token from authentication",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          },
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "description": "getmipay authentication token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          },
+          {
+            "name": "reference",
+            "in": "path",
+            "description": "User reference ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "SP6VC"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardUserResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action/card/{userId}": {
+      "post": {
+        "tags": ["Virtual Cards"],
+        "summary": "Create Virtual Card",
+        "description": "Create a new virtual card for a specific user",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Bearer token from authentication",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          },
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "description": "getmipay authentication token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "User ID for whom to create the card",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "SP6VC"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Virtual card creation details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VirtualCardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Virtual card created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VirtualCardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid card data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action/card/{id}": {
+      "get": {
+        "tags": ["Virtual Cards"],
+        "summary": "Get Virtual Card",
+        "description": "Retrieve virtual card details by card ID",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Bearer token from authentication",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          },
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "description": "getmipay authentication token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          },
+          {
+            "name": "cardId",
+            "in": "path",
+            "description": "Virtual card ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CARD_123456"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Card retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VirtualCardResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Card not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action/card/transaction/{id}": {
+      "get": {
+        "tags": ["Virtual Cards"],
+        "summary": "Card Operations",
+        "description": "Perform operations on virtual card (topup, withdraw, enable/disable, get transactions, terminate)",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Bearer token from authentication",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          },
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "description": "getmipay authentication token",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+          },
+          {
+            "name": "cardId",
+            "in": "path",
+            "description": "Virtual card ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CARD_123456"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "description": "Operation to perform",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["topup", "withdraw", "disabled", "enabled", "transactions", "terminate"],
+              "example": "topup"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "description": "Currency for amount operations",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["USD", "EUR", "XAF"],
+              "example": "USD"
+            }
+          },
+          {
+            "name": "amount",
+            "in": "query",
+            "description": "Amount for topup/withdraw operations",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.01,
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardOperationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid operation parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
             "content": {
               "application/json": {
                 "schema": {
@@ -957,7 +1443,7 @@
               "payment_url": {
                 "type": "string",
                 "description": "URL to redirect customer for payment (if applicable)",
-                "example": "https://soleaspay.com/pay/MLS690d472dd7ee7B"
+                "example": "null"
               },
               "webhook_urls": {
                 "type": "object",
@@ -1080,7 +1566,7 @@
           },
           "pay_id": {
             "type": "string",
-            "description": "Soleaspay payment reference (received from Pay-In API)",
+            "description": "getmipay payment reference (received from Pay-In API)",
             "example": "MLS690d472dd7ee7B"
           },
           "operation": {
@@ -1156,6 +1642,313 @@
               "merchant_name": {
                 "type": "string",
                 "example": "My Awesome Business"
+              }
+            }
+          }
+        }
+      },
+      "VirtualCardAuthResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "Authentication token for virtual card operations",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "expires_at": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-12-16T12:00:00Z"
+              }
+            }
+          }
+        }
+      },
+      "CardUserRequest": {
+        "type": "object",
+        "required": ["first_name", "last_name", "email", "country_code", "contact", "dob", "billing_adress", "billing_city", "billing_country", "billing_state", "billing_postal_code", "id_number"],
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "example": "John"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "john@gmail.com"
+          },
+          "country_code": {
+            "type": "string",
+            "example": "CM"
+          },
+          "contact": {
+            "type": "string",
+            "example": "698479723"
+          },
+          "dob": {
+            "type": "string",
+            "format": "date",
+            "example": "2010-01-01"
+          },
+          "is_business": {
+            "type": "boolean",
+            "default": false,
+            "example": false
+          },
+          "business_name": {
+            "type": "string",
+            "example": "NAN"
+          },
+          "billing_adress": {
+            "type": "string",
+            "example": "kotto"
+          },
+          "billing_city": {
+            "type": "string",
+            "example": "DOUALA"
+          },
+          "billing_country": {
+            "type": "string",
+            "example": "CAMEROON"
+          },
+          "billing_state": {
+            "type": "string",
+            "example": "littoral"
+          },
+          "billing_postal_code": {
+            "type": "string",
+            "example": "237"
+          },
+          "id_number": {
+            "type": "string",
+            "example": "00858574849"
+          }
+        }
+      },
+      "CardUserResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string",
+                "example": "SP6VC"
+              },
+              "reference": {
+                "type": "string",
+                "example": "USR_123456"
+              },
+              "first_name": {
+                "type": "string",
+                "example": "John"
+              },
+              "last_name": {
+                "type": "string",
+                "example": "Doe"
+              },
+              "email": {
+                "type": "string",
+                "example": "john@gmail.com"
+              },
+              "status": {
+                "type": "string",
+                "example": "active"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "CardUsersListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "users": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CardUserResponse"
+                }
+              },
+              "total_count": {
+                "type": "integer",
+                "example": 5
+              }
+            }
+          }
+        }
+      },
+      "VirtualCardRequest": {
+        "type": "object",
+        "required": ["balance", "currency", "card_type", "category", "grade"],
+        "properties": {
+          "balance": {
+            "type": "number",
+            "minimum": 0.01,
+            "example": 10
+          },
+          "currency": {
+            "type": "string",
+            "enum": ["USD", "EUR", "XAF"],
+            "example": "USD"
+          },
+          "card_type": {
+            "type": "string",
+            "enum": ["VISA", "MASTERCARD"],
+            "example": "VISA"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["PERSONAL", "BUSINESS"],
+            "example": "PERSONAL"
+          },
+          "grade": {
+            "type": "string",
+            "enum": ["BASIC", "PREMIUM"],
+            "example": "BASIC"
+          }
+        }
+      },
+      "VirtualCardResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "card_id": {
+                "type": "string",
+                "example": "CARD_123456"
+              },
+              "user_id": {
+                "type": "string",
+                "example": "SP6VC"
+              },
+              "card_number": {
+                "type": "string",
+                "example": "4111111111111111"
+              },
+              "expiry_date": {
+                "type": "string",
+                "example": "12/2026"
+              },
+              "cvv": {
+                "type": "string",
+                "example": "123"
+              },
+              "balance": {
+                "type": "number",
+                "example": 10
+              },
+              "currency": {
+                "type": "string",
+                "example": "USD"
+              },
+              "card_type": {
+                "type": "string",
+                "example": "VISA"
+              },
+              "status": {
+                "type": "string",
+                "example": "active"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "CardOperationResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "example": "topup"
+              },
+              "card_id": {
+                "type": "string",
+                "example": "CARD_123456"
+              },
+              "new_balance": {
+                "type": "number",
+                "example": 20
+              },
+              "currency": {
+                "type": "string",
+                "example": "USD"
+              },
+              "status": {
+                "type": "string",
+                "example": "success"
+              },
+              "transactions": {
+                "type": "array",
+                "description": "List of transactions (for transactions action)",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "TXN_123"
+                    },
+                    "amount": {
+                      "type": "number",
+                      "example": 10
+                    },
+                    "currency": {
+                      "type": "string",
+                      "example": "USD"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "topup"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "completed"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
               }
             }
           }
