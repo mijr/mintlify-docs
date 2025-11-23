@@ -9,7 +9,7 @@
     },
     "license": {
       "name": "Proprietary",
-      "url": "https://getmipay.com/terms"
+      "url": "https://getmipay.com/"
     },
     "version": "1.1.0"
   },
@@ -72,11 +72,6 @@
         "tags": ["Authentication"],
         "summary": "Authenticate for Virtual Cards",
         "description": "Authenticate with getmipay to get tokens for virtual card operations. This endpoint requires API key authentication.",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "description": "Authentication credentials",
           "content": {
@@ -151,12 +146,12 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["public_apikey"],
+                "required": ["secret_apikey"],
                 "properties": {
                   "public_apikey": {
                     "type": "string",
-                    "description": "The public API key to check",
-                    "example": "pk_1234567890abcdef"
+                    "description": "The SECRET API key to check",
+                    "example": "sc_1234567890abcdef"
                   }
                 }
               }
@@ -2365,11 +2360,11 @@
           },
           "message": {
             "type": "string",
-            "example": "Invalid API key"
+            "example": "Invalid KEY"
           },
           "error_code": {
             "type": "string",
-            "example": "INVALID_API_KEY"
+            "example": "INVALID_PUBLIC_KEY"
           }
         }
       }

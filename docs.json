@@ -1,13 +1,13 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "GetMiPay API Documentation",
+  "name": "API Documentation",
   "colors": {
     "primary": "#2563EB",
     "light": "#3B82F6",
     "dark": "#1D4ED8"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/getmipay.svg",
   "navigation": {
     "tabs": [
       {
@@ -99,8 +99,8 @@
     }
   },
   "logo": {
-    "light": "/logo/GETMIPAY.png",
-    "dark": "/logo/GETMIPAY.png"
+    "light": "/logo/getmipay1.png",
+    "dark": "/logo/getmipay1.png"
   },
   "navbar": {
     "links": [
