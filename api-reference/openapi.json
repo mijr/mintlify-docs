@@ -1672,7 +1672,7 @@
           },
           "currency": {
             "type": "string",
-            "enum": ["XAF", "USD", "EUR"],
+            "enum": ["XAF", "XOF"],
             "default": "XAF",
             "example": "XAF"
           },
