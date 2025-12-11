@@ -1679,7 +1679,7 @@
           "wallet": {
             "type": "string",
             "description": "Customer mobile money wallet number",
-            "example": "237690000000"
+            "example": "690000000"
           },
           "description": {
             "type": "string",
