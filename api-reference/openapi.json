@@ -308,95 +308,97 @@
         }
       }
     },
-    "/convert-currency": {
-      "get": {
-        "tags": ["Currency"],
-        "summary": "Convert Currency",
-        "description": "Convert an amount from one currency to another using ISO 4217 currency codes.",
-        "security": [
-          {
-            "ApiKeyAuth": []
+   "/convert-currency": {
+  "get": {
+    "tags": ["Currency"],
+    "summary": "Convert Currency",
+    "description": "Convert an amount from one currency to another using ISO 4217 currency codes. Returns the converted amount in the target currency.",
+    "security": [
+      {
+        "ApiKeyAuth": []
+      }
+    ],
+    "parameters": [
+      {
+        "name": "amount",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "number",
+          "minimum": 0.01,
+          "example": 10000
+        },
+        "description": "The amount to convert in the source currency."
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$",
+          "enum": ["XAF", "XOF", "USD", "EUR"],
+          "example": "XAF"
+        },
+        "description": "The source currency code (ISO 4217). Supported: XAF, XOF, USD, EUR"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$",
+          "enum": ["XAF", "XOF", "USD", "EUR"],
+          "example": "XOF"
+        },
+        "description": "The target currency code (ISO 4217). Supported: XAF, XOF, USD, EUR"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Conversion successful",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CurrencyConversionResponse"
+            }
           }
-        ],
-        "parameters": [
-          {
-            "name": "amount",
-            "in": "query",
-            "required": true,
+        }
+      },
+      "400": {
+        "description": "Bad request - invalid parameters",
+        "content": {
+          "application/json": {
             "schema": {
-              "type": "number",
-              "minimum": 0.01,
-              "example": 100
-            },
-            "description": "The amount to convert."
-          },
-          {
-            "name": "from_currency",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "pattern": "^[A-Z]{3}$",
-              "example": "XOF"
-            },
-            "description": "The source currency code (ISO 4217)."
-          },
-          {
-            "name": "to_currency",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "pattern": "^[A-Z]{3}$",
-              "example": "XAF"
-            },
-            "description": "The target currency code (ISO 4217)."
+              "$ref": "#/components/schemas/Error"
+            }
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Conversion successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CurrencyConversionResponse"
-                }
-              }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Invalid API credentials",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
             }
-          },
-          "400": {
-            "description": "Bad request - invalid parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Invalid API credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Merchant account not active or KYC not approved",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
+          }
+        }
+      },
+      "403": {
+        "description": "Forbidden - Merchant account not active or KYC not approved",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
             }
           }
         }
       }
-    },
+    }
+  }
+},
     "/payments/payin": {
       "post": {
         "tags": ["Payments"],
@@ -1615,50 +1617,33 @@
           }
         }
       },
-      "CurrencyConversionResponse": {
+     "CurrencyConversionResponse": {
         "type": "object",
         "properties": {
           "success": {
             "type": "boolean",
-            "example": true
+            "example": true,
+            "description": "Indicates if the conversion was successful"
           },
           "data": {
             "type": "object",
             "properties": {
-              "from_currency": {
-                "type": "string",
-                "example": "XOF",
-                "description": "The currency code being converted from"
-              },
-              "to_currency": {
-                "type": "string",
-                "example": "XAF",
-                "description": "The currency code being converted to"
-              },
               "amount": {
                 "type": "number",
-                "example": 100,
-                "description": "The original amount before conversion"
+                "example": 10245,
+                "description": "The converted amount in the target currency"
               },
-              "converted_amount": {
-                "type": "number",
-                "example": 100,
-                "description": "The converted amount after applying the rate"
-              },
-              "rate": {
-                "type": "number",
-                "example": 1,
-                "description": "The exchange rate applied between the two currencies"
-              },
-              "timestamp": {
+              "currency": {
                 "type": "string",
-                "format": "date-time",
-                "example": "2025-11-12T10:30:00Z",
-                "description": "The UTC timestamp when the conversion rate was fetched"
+                "example": "XOF",
+                "description": "The target currency code (ISO 4217)",
+                "enum": ["XAF", "XOF", "USD", "EUR"]
               }
-            }
+            },
+            "description": "Conversion result with the converted amount and target currency"
           }
-        }
+        },
+        "description": "Response containing the converted amount in the target currency"
       },
       "PayInRequest": {
         "type": "object",
