@@ -308,102 +308,11 @@
         }
       }
     },
-   "/convert-currency": {
-  "get": {
-    "tags": ["Currency"],
-    "summary": "Convert Currency",
-    "description": "Convert an amount from one currency to another using ISO 4217 currency codes. Returns the converted amount in the target currency.",
-    "security": [
-      {
-        "ApiKeyAuth": []
-      }
-    ],
-    "parameters": [
-      {
-        "name": "amount",
-        "in": "query",
-        "required": true,
-        "schema": {
-          "type": "number",
-          "minimum": 0.01,
-          "example": 10000
-        },
-        "description": "The amount to convert in the source currency."
-      },
-      {
-        "name": "from",
-        "in": "query",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "pattern": "^[A-Z]{3}$",
-          "enum": ["XAF", "XOF", "USD", "EUR"],
-          "example": "XAF"
-        },
-        "description": "The source currency code (ISO 4217). Supported: XAF, XOF, USD, EUR"
-      },
-      {
-        "name": "to",
-        "in": "query",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "pattern": "^[A-Z]{3}$",
-          "enum": ["XAF", "XOF", "USD", "EUR"],
-          "example": "XOF"
-        },
-        "description": "The target currency code (ISO 4217). Supported: XAF, XOF, USD, EUR"
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "Conversion successful",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/CurrencyConversionResponse"
-            }
-          }
-        }
-      },
-      "400": {
-        "description": "Bad request - invalid parameters",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      },
-      "401": {
-        "description": "Unauthorized - Invalid API credentials",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      },
-      "403": {
-        "description": "Forbidden - Merchant account not active or KYC not approved",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      }
-    }
-  }
-},
-    "/payments/payin": {
-      "post": {
-        "tags": ["Payments"],
-        "summary": "Initiate PayIn",
-        "description": "Collect payment from a customer via mobile money. The transaction will be processed through getmipay and funds will be credited to your merchant account upon success.",
+    "/convert-currency": {
+      "get": {
+        "tags": ["Currency"],
+        "summary": "Convert Currency",
+        "description": "Convert an amount from one currency to another using ISO 4217 currency codes. Returns the converted amount in the target currency.",
         "security": [
           {
             "ApiKeyAuth": []
@@ -411,45 +320,48 @@
         ],
         "parameters": [
           {
-            "name": "operation",
-            "in": "header",
-            "description": "Operation type - must be '2' for PayIn",
+            "name": "amount",
+            "in": "query",
             "required": true,
             "schema": {
-              "type": "string",
-              "enum": ["2"],
-              "example": "2"
-            }
+              "type": "number",
+              "minimum": 0.01,
+              "example": 10000
+            },
+            "description": "The amount to convert in the source currency."
           },
           {
-            "name": "service",
-            "in": "header",
-            "description": "Service identifier for the payment method",
+            "name": "from",
+            "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "example": "1"
-            }
+              "pattern": "^[A-Z]{3}$",
+              "enum": ["XAF", "XOF", "USD", "EUR"],
+              "example": "XAF"
+            },
+            "description": "The source currency code (ISO 4217). Supported: XAF, XOF, USD, EUR"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$",
+              "enum": ["XAF", "XOF", "USD", "EUR"],
+              "example": "XOF"
+            },
+            "description": "The target currency code (ISO 4217). Supported: XAF, XOF, USD, EUR"
           }
         ],
-        "requestBody": {
-          "description": "Payment details to collect from customer",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PayInRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
-            "description": "Payment initiated successfully",
+            "description": "Conversion successful",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PayInResponse"
+                  "$ref": "#/components/schemas/CurrencyConversionResponse"
                 }
               }
             }
@@ -474,8 +386,8 @@
               }
             }
           },
-          "500": {
-            "description": "Internal server error",
+          "403": {
+            "description": "Forbidden - Merchant account not active or KYC not approved",
             "content": {
               "application/json": {
                 "schema": {
@@ -487,6 +399,95 @@
         }
       }
     },
+    "/payments/payin": {
+  "post": {
+    "tags": ["Payments"],
+    "summary": "Initiate PayIn",
+    "description": "Collect payment from a customer via mobile money. The transaction will be processed through getmipay and funds will be credited to your merchant account upon success.\n\n**OTP Requirement:**\n- For Orange Money services (OM CI, OM SN, OM BF), OTP header is REQUIRED\n- OTP must be maximum 8 characters/digits\n- OTP is only required for these specific services",
+    "security": [
+      {
+        "ApiKeyAuth": []
+      }
+    ],
+    "parameters": [
+      {
+        "name": "operation",
+        "in": "header",
+        "description": "Operation type - must be '2' for PayIn",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": ["2"],
+          "example": "2"
+        }
+      },
+      {
+        "name": "service",
+        "in": "header",
+        "description": "Service identifier for the payment method.\n\n**Services requiring OTP:**\n- `3` - OM CI (Orange Money Côte d'Ivoire)\n- `4` - OM SN (Orange Money Senegal)\n- `5` - OM BF (Orange Money Burkina Faso)",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "1"
+        }
+      },
+      {
+        "name": "otp",
+        "in": "header",
+        "description": "One-Time Password for Orange Money services.\n\n**Required only for:** OM CI (service: 3), OM SN (service: 4), OM BF (service: 5)\n**Format:** Maximum 8 characters/digits\n**Note:** This header is optional for services that don't require OTP",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "maxLength": 8,
+          "example": "123456"
+        }
+      }
+    ],
+    "requestBody": {
+      "description": "Payment details to collect from customer",
+      "content": {
+        "application/json": {
+          "schema": {
+            "$ref": "#/components/schemas/PayInRequest"
+          }
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "200": {
+        "description": "Payment initiated successfully",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PayInResponse"
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Invalid API credentials",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+},
     "/payouts": {
       "post": {
         "tags": ["Payouts"],
@@ -830,6 +831,150 @@
         }
       }
     },
+    "/virtual-cards/fees": {
+      "get": {
+        "tags": ["Virtual Cards"],
+        "summary": "Get Virtual Card Fees",
+        "description": "Retrieve all active virtual card fee configurations. Fees shown are total amounts including both Soleaspay and GetMiPay fees.",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fees retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VirtualCardFeesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/virtual-cards/calculate-fees": {
+      "get": {
+        "tags": ["Virtual Cards"],
+        "summary": "Calculate Card Creation Fees",
+        "description": "Calculate fees for creating a virtual card based on card grade, type, and initial balance. Returns total fees including both Soleaspay and GetMiPay fees.",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "card_grade",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["BASIC", "PREMIUM"],
+              "example": "BASIC"
+            },
+            "description": "Grade of the card (BASIC or PREMIUM)"
+          },
+          {
+            "name": "card_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["VISA", "MASTERCARD"],
+              "example": "VISA"
+            },
+            "description": "Type of the card (VISA or MASTERCARD)"
+          },
+          {
+            "name": "initial_balance",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "minimum": 1,
+              "example": 100.00
+            },
+            "description": "Initial balance to load on the card"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fees calculated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculateFeesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fee configuration not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/virtual-cards/action/card/user": {
       "post": {
         "tags": ["Virtual Cards"],
@@ -837,8 +982,7 @@
         "description": "Create a new user for virtual card operations",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "requestBody": {
@@ -874,7 +1018,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid token",
+            "description": "Unauthorized - Invalid API credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -891,8 +1035,7 @@
         "description": "Retrieve list of all virtual card users",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "responses": {
@@ -907,7 +1050,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid token",
+            "description": "Unauthorized - Invalid API credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -926,8 +1069,7 @@
         "description": "Retrieve a specific virtual card user by reference",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "parameters": [
@@ -973,8 +1115,7 @@
         "description": "Create a new virtual card for a specific user",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "parameters": [
@@ -1022,7 +1163,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid token",
+            "description": "Unauthorized - Invalid API credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -1041,8 +1182,7 @@
         "description": "Retrieve virtual card details by card ID",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "parameters": [
@@ -1088,8 +1228,7 @@
         "description": "Retrieve the current balance of a virtual card",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "parameters": [
@@ -1148,8 +1287,7 @@
         "description": "Add funds to a virtual card",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "parameters": [
@@ -1209,8 +1347,7 @@
         "description": "Withdraw funds from a virtual card",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "parameters": [
@@ -1270,8 +1407,7 @@
         "description": "Enable a disabled virtual card",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "parameters": [
@@ -1307,8 +1443,7 @@
         "description": "Disable a virtual card",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "parameters": [
@@ -1344,8 +1479,7 @@
         "description": "Retrieve transaction history for a virtual card",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "parameters": [
@@ -1381,8 +1515,7 @@
         "description": "Permanently terminate a virtual card",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "parameters": [
@@ -1418,8 +1551,7 @@
         "description": "Perform generic operations on virtual card",
         "security": [
           {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
+            "ApiKeyAuth": []
           }
         ],
         "parameters": [
@@ -1480,6 +1612,232 @@
   },
   "components": {
     "schemas": {
+      "VirtualCardFeesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "fees": {
+                "type": "array",
+                "description": "List of active virtual card fee configurations",
+                "items": {
+                  "$ref": "#/components/schemas/VirtualCardFee"
+                }
+              },
+              "total_fee_configurations": {
+                "type": "integer",
+                "example": 4
+              },
+              "currencies_available": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["USD"]
+              },
+              "card_types_available": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["VISA", "MASTERCARD"]
+              },
+              "card_grades_available": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["BASIC", "PREMIUM"]
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "message": {
+                "type": "string",
+                "example": "Fees operaton successfully retrieved"
+              }
+            }
+          }
+        }
+      },
+      "VirtualCardFee": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "card_grade": {
+            "type": "string",
+            "enum": ["BASIC", "PREMIUM"],
+            "example": "BASIC"
+          },
+          "card_type": {
+            "type": "string",
+            "enum": ["VISA", "MASTERCARD"],
+            "example": "VISA"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "creation_fee": {
+            "type": "number",
+            "format": "float",
+            "example": 3.50,
+            "description": "Total fee for creating the card"
+          },
+          "monthly_fee": {
+            "type": "number",
+            "format": "float",
+            "example": 1.30,
+            "description": "Total monthly maintenance fee"
+          },
+          "top_up_fee": {
+            "type": "number",
+            "format": "float",
+            "example": 1.20,
+            "description": "Total fee for adding funds to the card"
+          },
+          "withdrawal_fee": {
+            "type": "number",
+            "format": "float",
+            "example": 3.30,
+            "description": "Total fee for withdrawing from the card"
+          },
+          "reject_balance_fee": {
+            "type": "number",
+            "format": "float",
+            "example": 1.10,
+            "description": "Total fee for rejected balance transactions"
+          },
+          "funding_limits": {
+            "type": "object",
+            "properties": {
+              "min": {
+                "type": "number",
+                "format": "float",
+                "example": 2.00
+              },
+              "max": {
+                "type": "number",
+                "format": "float",
+                "example": 10000.00
+              },
+              "currency": {
+                "type": "string",
+                "example": "USD"
+              }
+            }
+          },
+          "is_active": {
+            "type": "boolean",
+            "example": true
+          },
+          "last_updated": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        }
+      },
+      "CalculateFeesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "card_grade": {
+                "type": "string",
+                "example": "BASIC"
+              },
+              "card_type": {
+                "type": "string",
+                "example": "VISA"
+              },
+              "currency": {
+                "type": "string",
+                "example": "USD"
+              },
+              "initial_balance": {
+                "type": "number",
+                "format": "float",
+                "example": 100.00
+              },
+              "creation_fee": {
+                "type": "number",
+                "format": "float",
+                "example": 3.50,
+                "description": "Total fee for creating the card"
+              },
+              "total_amount_required": {
+                "type": "number",
+                "format": "float",
+                "example": 103.50,
+                "description": "Initial balance + creation fee"
+              },
+              "other_fees": {
+                "type": "object",
+                "properties": {
+                  "monthly_fee": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 1.30
+                  },
+                  "top_up_fee": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 1.20
+                  },
+                  "withdrawal_fee": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 3.30
+                  },
+                  "reject_balance_fee": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 1.10
+                  }
+                }
+              },
+              "funding_limits": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 2.00
+                  },
+                  "max": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 10000.00
+                  },
+                  "currency": {
+                    "type": "string",
+                    "example": "USD"
+                  }
+                }
+              },
+              "message": {
+                "type": "string",
+                "example": "Fees operation calculated successfully"
+              }
+            }
+          }
+        }
+      },
       "ServicesResponse": {
         "type": "object",
         "properties": {
@@ -1617,7 +1975,7 @@
           }
         }
       },
-     "CurrencyConversionResponse": {
+      "CurrencyConversionResponse": {
         "type": "object",
         "properties": {
           "success": {
@@ -1645,7 +2003,7 @@
         },
         "description": "Response containing the converted amount in the target currency"
       },
-      "PayInRequest": {
+     "PayInRequest": {
         "type": "object",
         "required": ["amount", "currency", "wallet", "description", "customer_name"],
         "properties": {
@@ -1689,7 +2047,7 @@
           }
         }
       },
-      "PayOutRequest": {
+            "PayOutRequest": {
         "type": "object",
         "required": ["amount", "currency", "wallet", "description", "customer_name"],
         "properties": {
@@ -1720,62 +2078,85 @@
           }
         }
       },
-      "PayInResponse": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "message": {
-            "type": "string",
-            "example": "Payment initiated successfully"
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "transaction_reference": {
-                "type": "string",
-                "example": "MPAYIN_ABC123DEF456"
-              },
-              "soleaspay_reference": {
-                "type": "string",
-                "example": "MLS690d472dd7ee7B"
-              },
-              "amount": {
-                "type": "number",
-                "example": 1000
-              },
-              "currency": {
-                "type": "string",
-                "example": "XAF"
-              },
-              "status": {
-                "type": "string",
-                "example": "pending"
-              },
-              "payment_url": {
-                "type": "string",
-                "description": "URL to redirect customer for payment (if applicable)",
-                "example": "null"
-              },
-              "webhook_urls": {
-                "type": "object",
-                "properties": {
-                  "success": {
-                    "type": "string",
-                    "example": "https://getmipay.com/api/webhooks/success"
-                  },
-                  "failure": {
-                    "type": "string",
-                    "example": "https://getmipay.com/api/webhooks/failure"
-                  }
-                }
-              }
+     "PayInResponse": {
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "example": true
+    },
+    "message": {
+      "type": "string",
+      "example": "Payment initiated successfully"
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "transaction_reference": {
+          "type": "string",
+          "example": "MPAYIN_ABC123DEF456"
+        },
+        "soleaspay_reference": {
+          "type": "string",
+          "example": "MLS690d472dd7ee7B"
+        },
+        "amount": {
+          "type": "number",
+          "example": 1000
+        },
+        "fee_amount": {
+          "type": "number",
+          "example": 50,
+          "description": "Fee amount deducted"
+        },
+        "net_amount": {
+          "type": "number",
+          "example": 950,
+          "description": "Net amount credited to merchant"
+        },
+        "currency": {
+          "type": "string",
+          "example": "XAF"
+        },
+        "status": {
+          "type": "string",
+          "example": "pending"
+        },
+        "service_used": {
+          "type": "string",
+          "example": "3"
+        },
+        "service_name": {
+          "type": "string",
+          "example": "OM CI"
+        },
+        "otp_required": {
+          "type": "boolean",
+          "example": true,
+          "description": "Indicates if OTP was required for this service"
+        },
+        "payment_url": {
+          "type": "string",
+          "description": "URL to redirect customer for payment (if applicable)",
+          "example": "null"
+        },
+        "webhook_urls": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "string",
+              "example": "https://getmipay.com/api/webhooks/success"
+            },
+            "failure": {
+              "type": "string",
+              "example": "https://getmipay.com/api/webhooks/failure"
             }
           }
         }
-      },
+      }
+    }
+  }
+},
       "PayOutResponse": {
         "type": "object",
         "properties": {
@@ -2072,114 +2453,112 @@
           }
         }
       },
-    "CardUserResponse": {
-  "type": "object",
-  "properties": {
-    "success": {
-      "type": "boolean",
-      "example": true
-    },
-    "message": {
-      "type": "string",
-      "example": "Virtual card user created successfully"
-    },
-    "data": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer",
-          "example": 12
-        },
-        "merchant_id": {
-          "type": "integer",
-          "example": 3
-        },
-        "reference": {
-          "type": "string",
-          "example": "SP6A9F21D0VC"
-        },
-        "first_name": {
-          "type": "string",
-          "example": "Alex"
-        },
-        "last_name": {
-          "type": "string",
-          "example": "Moris"
-        },
-        "email": {
-          "type": "string",
-          "format": "email",
-          "example": "alex.moris@example.com"
-        },
-        "contact": {
-          "type": "string",
-          "example": "690112233"
-        },
-        "dob": {
-          "type": "string",
-          "format": "date-time",
-          "example": "1994-03-21T00:00:00.000000Z"
-        },
-        "country_code": {
-          "type": "string",
-          "example": "237"
-        },
-        "billing_name": {
-          "type": "string",
-          "example": "Alex Moris"
-        },
-        "is_business": {
-          "type": "boolean",
-          "example": false
-        },
-        "business_name": {
-          "type": ["string", "null"],
-          "example": null
-        },
-        "billing_address": {
-          "type": "string",
-          "example": "Carrefour Bastos"
-        },
-        "billing_city": {
-          "type": "string",
-          "example": "Yaoundé"
-        },
-        "billing_country": {
-          "type": "string",
-          "example": "CM"
-        },
-        "billing_state": {
-          "type": "string",
-          "example": "Centre"
-        },
-        "billing_postal_code": {
-          "type": "string",
-          "example": "00123"
-        },
-        "id_number": {
-          "type": "string",
-          "example": "CNI004829191"
-        },
-
-        "status": {
-          "type": "string",
-          "example": "active"
-        },
-        "created_at": {
-          "type": "string",
-          "format": "date-time",
-          "example": "2025-10-02T12:45:30.000000Z"
-        },
-        "updated_at": {
-          "type": "string",
-          "format": "date-time",
-          "example": "2025-10-02T12:45:30.000000Z"
+      "CardUserResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Virtual card user created successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 12
+              },
+              "merchant_id": {
+                "type": "integer",
+                "example": 3
+              },
+              "reference": {
+                "type": "string",
+                "example": "SP6A9F21D0VC"
+              },
+              "first_name": {
+                "type": "string",
+                "example": "Alex"
+              },
+              "last_name": {
+                "type": "string",
+                "example": "Moris"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "alex.moris@example.com"
+              },
+              "contact": {
+                "type": "string",
+                "example": "690112233"
+              },
+              "dob": {
+                "type": "string",
+                "format": "date-time",
+                "example": "1994-03-21T00:00:00.000000Z"
+              },
+              "country_code": {
+                "type": "string",
+                "example": "237"
+              },
+              "billing_name": {
+                "type": "string",
+                "example": "Alex Moris"
+              },
+              "is_business": {
+                "type": "boolean",
+                "example": false
+              },
+              "business_name": {
+                "type": ["string", "null"],
+                "example": null
+              },
+              "billing_address": {
+                "type": "string",
+                "example": "Carrefour Bastos"
+              },
+              "billing_city": {
+                "type": "string",
+                "example": "Yaoundé"
+              },
+              "billing_country": {
+                "type": "string",
+                "example": "CM"
+              },
+              "billing_state": {
+                "type": "string",
+                "example": "Centre"
+              },
+              "billing_postal_code": {
+                "type": "string",
+                "example": "00123"
+              },
+              "id_number": {
+                "type": "string",
+                "example": "CNI004829191"
+              },
+              "status": {
+                "type": "string",
+                "example": "active"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-10-02T12:45:30.000000Z"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-10-02T12:45:30.000000Z"
+              }
+            }
+          }
         }
-      }
-    }
-  }
-}
-,
+      },
       "CardUsersListResponse": {
         "type": "object",
         "properties": {
@@ -2438,6 +2817,28 @@
           "error_code": {
             "type": "string",
             "example": "INVALID_PUBLIC_KEY"
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           }
         }
       }
