@@ -966,6 +966,74 @@
         }
       }
     },
+    "/virtual-cards/action/card/{userId}": {
+      "post": {
+        "tags": ["Virtual Cards"],
+        "summary": "Create Virtual Card",
+        "description": "Create a new virtual card for a specific user",
+        "security": [
+          {
+            "ApiKeyAuth": [],
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "User ID for whom to create the card",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "SP6VC"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Virtual card creation details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VirtualCardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Virtual card created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VirtualCardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid card data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/virtual-cards/action/card/{id}": {
       "get": {
         "tags": ["Virtual Cards"],
