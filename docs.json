@@ -55,7 +55,6 @@
                "api-reference/virtualCard/createCard",
                 "api-reference/virtualCard/fetchCard",
                  "api-reference/virtualCard/cardUser",
-                  "api-reference/virtualCard/transaction",
                    "api-reference/virtualCard/balance",
                 "api-reference/virtualCard/topUp",
                   "api-reference/virtualCard/withdraw",

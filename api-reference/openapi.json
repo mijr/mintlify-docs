@@ -966,74 +966,6 @@
         }
       }
     },
-    "/virtual-cards/action/card/{userId}": {
-      "post": {
-        "tags": ["Virtual Cards"],
-        "summary": "Create Virtual Card",
-        "description": "Create a new virtual card for a specific user",
-        "security": [
-          {
-            "ApiKeyAuth": [],
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "description": "User ID for whom to create the card",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "SP6VC"
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "Virtual card creation details",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VirtualCardRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Virtual card created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VirtualCardResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request - invalid card data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Invalid token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/virtual-cards/action/card/{id}": {
       "get": {
         "tags": ["Virtual Cards"],
@@ -1987,15 +1919,33 @@
       },
       "CardUserRequest": {
         "type": "object",
-        "required": ["first_name", "last_name", "email", "country_code", "contact", "dob", "billing_adress", "billing_city", "billing_country", "billing_state", "billing_postal_code", "id_number"],
+        "required": [
+          "first_name",
+          "last_name",
+          "email",
+          "country_code",
+          "contact",
+          "dob",
+          "billing_address",
+          "billing_city",
+          "billing_country",
+          "billing_state",
+          "billing_postal_code",
+          "id_number"
+        ],
         "properties": {
+          "reference": {
+            "type": "string",
+            "readOnly": true,
+            "example": "SP6VC"
+          },
           "first_name": {
             "type": "string",
-            "example": "John"
+            "example": "Doe"
           },
           "last_name": {
             "type": "string",
-            "example": "Doe"
+            "example": "John"
           },
           "email": {
             "type": "string",
@@ -2004,94 +1954,164 @@
           },
           "country_code": {
             "type": "string",
-            "example": "CM"
+            "example": "+237"
           },
           "contact": {
             "type": "string",
-            "example": "698479723"
+            "example": "697028808"
           },
           "dob": {
             "type": "string",
-            "format": "date",
-            "example": "2010-01-01"
+            "format": "date-time",
+            "example": "1985-05-15T18:36:57+00:00"
+          },
+          "billing_name": {
+            "type": "string",
+            "readOnly": true,
+            "example": "Doe John"
           },
           "is_business": {
             "type": "boolean",
-            "default": false,
             "example": false
           },
           "business_name": {
-            "type": "string",
-            "example": "NAN"
+            "type": ["string", "null"],
+            "example": null
           },
-          "billing_adress": {
+          "billing_address": {
             "type": "string",
-            "example": "kotto"
+            "example": "Logbessou"
           },
           "billing_city": {
             "type": "string",
-            "example": "DOUALA"
+            "example": "Douala"
           },
           "billing_country": {
             "type": "string",
-            "example": "CAMEROON"
+            "example": "CM"
           },
           "billing_state": {
             "type": "string",
-            "example": "littoral"
+            "example": "Littoral"
           },
           "billing_postal_code": {
             "type": "string",
-            "example": "237"
+            "example": "1234"
           },
           "id_number": {
             "type": "string",
-            "example": "00858574849"
+            "example": "125464"
           }
         }
       },
-      "CardUserResponse": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "user_id": {
-                "type": "string",
-                "example": "SP6VC"
-              },
-              "reference": {
-                "type": "string",
-                "example": "USR_123456"
-              },
-              "first_name": {
-                "type": "string",
-                "example": "John"
-              },
-              "last_name": {
-                "type": "string",
-                "example": "Doe"
-              },
-              "email": {
-                "type": "string",
-                "example": "john@gmail.com"
-              },
-              "status": {
-                "type": "string",
-                "example": "active"
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              }
-            }
-          }
+    "CardUserResponse": {
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "example": true
+    },
+    "message": {
+      "type": "string",
+      "example": "Virtual card user created successfully"
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 12
+        },
+        "merchant_id": {
+          "type": "integer",
+          "example": 3
+        },
+        "reference": {
+          "type": "string",
+          "example": "SP6A9F21D0VC"
+        },
+        "first_name": {
+          "type": "string",
+          "example": "Alex"
+        },
+        "last_name": {
+          "type": "string",
+          "example": "Moris"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "example": "alex.moris@example.com"
+        },
+        "contact": {
+          "type": "string",
+          "example": "690112233"
+        },
+        "dob": {
+          "type": "string",
+          "format": "date-time",
+          "example": "1994-03-21T00:00:00.000000Z"
+        },
+        "country_code": {
+          "type": "string",
+          "example": "237"
+        },
+        "billing_name": {
+          "type": "string",
+          "example": "Alex Moris"
+        },
+        "is_business": {
+          "type": "boolean",
+          "example": false
+        },
+        "business_name": {
+          "type": ["string", "null"],
+          "example": null
+        },
+        "billing_address": {
+          "type": "string",
+          "example": "Carrefour Bastos"
+        },
+        "billing_city": {
+          "type": "string",
+          "example": "Yaoundé"
+        },
+        "billing_country": {
+          "type": "string",
+          "example": "CM"
+        },
+        "billing_state": {
+          "type": "string",
+          "example": "Centre"
+        },
+        "billing_postal_code": {
+          "type": "string",
+          "example": "00123"
+        },
+        "id_number": {
+          "type": "string",
+          "example": "CNI004829191"
+        },
+
+        "status": {
+          "type": "string",
+          "example": "active"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2025-10-02T12:45:30.000000Z"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2025-10-02T12:45:30.000000Z"
         }
-      },
+      }
+    }
+  }
+}
+,
       "CardUsersListResponse": {
         "type": "object",
         "properties": {
