@@ -1,7 +1,8 @@
 ---
+
 title: Webhooks
 description: Receive real-time payment status updates via webhooks
----
+------------------------------------------------------------------
 
 # Webhooks
 
@@ -9,17 +10,114 @@ GetMiPay webhooks allow you to receive real-time notifications about payment sta
 
 ## Webhook URLs
 
-| Webhook Type | URL | Method |
-|-------------|-----|---------|
-| Success | `https://getmipay.com/api/webhooks/success` | POST |
-| Failure | `https://getmipay.com/api/webhooks/failure` | POST |
-| Generic | `https://getmipay.com/api/webhooks/callback` | POST |
+| Webhook Type | URL                                          | Method     |
+| ------------ | -------------------------------------------- | ---------- |
+| Success      | `https://getmipay.com/api/webhooks/success`  | POST / GET |
+| Failure      | `https://getmipay.com/api/webhooks/failure`  | POST / GET |
+| Generic      | `https://getmipay.com/api/webhooks/callback` | POST / GET |
 
 ## Webhook Security
 
 Webhooks are sent with the following headers for verification:
 
 ```http
-X-GetMiPay-Signature: sha256=...
-X-GetMiPay-Timestamp: 1635724800
+X-APIKEY: mipay48484....
 Content-Type: application/json
+```
+
+---
+
+## Success Webhook
+
+### Request (GET example)
+
+```
+GET /api/webhooks/success?order_id=GMP_XYZ&reference=MLS_ABC&status=SUCCESS&amount=100&currency=XAF
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "status": "SUCCESS",
+  "message": "Payment successful",
+  "data": {
+    "external_reference": "GMP_XYZ",
+    "reference": "MLS_ABC",
+    "operation": "PURCHASE",
+    "amount": 100,
+    "currency": "XAF"
+  }
+}
+```
+
+---
+
+## Failure Webhook
+
+### Request (GET example)
+
+```
+GET /api/webhooks/failure?order_id=GMP_XYZ&reference=MLS_ABC&status=FAILED&message=Payment+cancelled&error_code=USER_CANCELLED
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "status": "FAILURE",
+  "message": "Payment failed",
+  "data": {
+    "external_reference": "GMP_20240115_123456",
+    "reference": "MLS69407e3808991B",
+    "operation": "PURCHASE",
+    "amount": 1500,
+    "currency": "XAF",
+    "customer_email": "john@example.com",
+    "customer_phone": "237612345678",
+    "payment_method": "MTN_MOBILE_MONEY",
+    "transaction_time": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+## Generic Callback
+
+The generic callback endpoint accepts both **GET** and **POST** requests and may receive payloads in different formats depending on the integration flow.
+
+### Endpoint
+
+```
+/webhooks/callback
+```
+
+### Response Example
+
+```json
+{
+  "success": true,
+  "status": "SUCCESS",
+  "created_at": "2024-01-15T10:30:00.000000Z",
+  "data": {
+    "operation": "PURCHASE",
+    "reference": "MLS69407e3808991B",
+    "external_reference": "GMP_ZYAZV4OR7HJY",
+    "transaction_reference": "MP25121533BF12B78AD720271ECC",
+    "amount": 100,
+    "currency": "XAF",
+    "customer_email": "customer@example.com"
+  }
+}
+```
+
+---
+
+## Notes
+
+* Always validate the `X-APIKEY` using your webhook secret.
+* Use the `X-GetMiPay-Timestamp` header to prevent replay attacks.
+* Respond with HTTP `200 OK` to acknowledge successful receipt of a webhook.
