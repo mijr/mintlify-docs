@@ -19,7 +19,7 @@
       "description": "Production server"
     },
     {
-      "url": "https://sandbox.getmepay.com/api/v1",
+      "url": "https://sandbox.getmipay.com/api",
       "description": "Sandbox server"
     }
   ],
