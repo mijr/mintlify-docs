@@ -7,7 +7,7 @@
     "light": "#3B82F6",
     "dark": "#1D4ED8"
   },
-  "favicon": "/getmipay.svg",
+  "favicon": "/logo.png",
   "navigation": {
     "tabs": [
       {
@@ -19,12 +19,6 @@
               "api-doc/index",
               "api-doc/quickstart",
                "api-doc/Mobile-Money" 
-            ]
-          },
-          {
-            "group": "Learn About",
-            "pages": [
-              "api-doc/webhooks"
             ]
           }
         ]
@@ -52,8 +46,11 @@
             "pages": [
               "api-reference/virtualCard/createUser",
               "api-reference/virtualCard/fetchUser",
+              "api-reference/virtualCard/updateUser",
+              "api-reference/virtualCard/userDetails",
                "api-reference/virtualCard/createCard",
                 "api-reference/virtualCard/fetchCard",
+                "api-reference/virtualCard/listCards",
                  "api-reference/virtualCard/cardUser",
                 "api-reference/virtualCard/balance",
                 "api-reference/virtualCard/topUp",
@@ -101,8 +98,8 @@
     }
   },
   "logo": {
-    "light": "/logo/getmipay1.png",
-    "dark": "/logo/getmipay1.png"
+    "light": "/logo/logo.png",
+    "dark": "/logo/logo.png"
   },
   "navbar": {
     "links": [

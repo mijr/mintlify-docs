@@ -25,7 +25,7 @@
   ],
   "security": [
     {
-      "ApiKeyAuth": []
+      "bearerAuth": []
     }
   ],
   "tags": [
@@ -69,26 +69,31 @@
   "paths": {
     "/action/auth": {
       "post": {
-        "tags": ["Authentication"],
-        "summary": "Authenticate for Virtual Cards",
-        "description": "Authenticate with getmipay to get tokens for virtual card operations. This endpoint requires API key authentication.",
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Authenticate and Get Bearer Token",
+        "description": "Authenticate once with your public and private API keys. The response returns a Tymon JWT bearer token that must be used for protected API routes. Token lifetime is 24 hours.",
         "requestBody": {
           "description": "Authentication credentials",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["public_apikey", "private_secretkey"],
+                "required": [
+                  "public_apikey",
+                  "private_secretkey"
+                ],
                 "properties": {
                   "public_apikey": {
                     "type": "string",
                     "description": "The public API key for authentication",
-                    "example": "pk_1234567890abcdef"
+                    "example": "gmp_pk_1234567890abcdef"
                   },
                   "private_secretkey": {
                     "type": "string",
                     "description": "The secret key for authentication",
-                    "example": "sk_1234567890abcdef"
+                    "example": "gmp_sk_1234567890abcdef"
                   }
                 }
               }
@@ -108,7 +113,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid credentials",
+            "description": "Unauthorized - Invalid API credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -127,31 +132,31 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/action/check-api-key": {
       "post": {
-        "tags": ["Authentication"],
-        "summary": "Check API Key Status",
-        "description": "Check the status and validity of an API key without full authentication.",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
+        "tags": [
+          "Authentication"
         ],
+        "summary": "Check API Key Status",
+        "description": "Public endpoint to check the status and validity of an API key without creating a JWT session.",
         "requestBody": {
           "description": "API key to check",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["secret_apikey"],
+                "required": [
+                  "secret_apikey"
+                ],
                 "properties": {
-                  "public_apikey": {
+                  "secret_apikey": {
                     "type": "string",
-                    "description": "The SECRET API key to check",
-                    "example": "sc_1234567890abcdef"
+                    "description": "The secret API key to check",
+                    "example": "gmp_sk_1234567890abcdef"
                   }
                 }
               }
@@ -261,19 +266,17 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/services": {
       "get": {
-        "tags": ["Services"],
-        "summary": "Get Available Services",
-        "description": "Retrieve all available payment services activated for your merchant account. These are the services you can use for PayIn and PayOut operations.",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
+        "tags": [
+          "Services"
         ],
+        "summary": "Get Available Services",
+        "description": "Retrieve all available payment services activated for the merchant identified by the JWT bearer token. These are the services you can use for PayIn and PayOut operations.",
         "responses": {
           "200": {
             "description": "Services retrieved successfully",
@@ -286,7 +289,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid API credentials",
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
             "content": {
               "application/json": {
                 "schema": {
@@ -305,19 +308,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/convert-currency": {
       "get": {
-        "tags": ["Currency"],
+        "tags": [
+          "Currency"
+        ],
         "summary": "Convert Currency",
         "description": "Convert an amount from one currency to another using ISO 4217 currency codes. Returns the converted amount in the target currency.",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "amount",
@@ -337,7 +342,12 @@
             "schema": {
               "type": "string",
               "pattern": "^[A-Z]{3}$",
-              "enum": ["XAF", "XOF", "USD", "EUR"],
+              "enum": [
+                "XAF",
+                "XOF",
+                "USD",
+                "EUR"
+              ],
               "example": "XAF"
             },
             "description": "The source currency code (ISO 4217). Supported: XAF, XOF, USD, EUR"
@@ -349,7 +359,12 @@
             "schema": {
               "type": "string",
               "pattern": "^[A-Z]{3}$",
-              "enum": ["XAF", "XOF", "USD", "EUR"],
+              "enum": [
+                "XAF",
+                "XOF",
+                "USD",
+                "EUR"
+              ],
               "example": "XOF"
             },
             "description": "The target currency code (ISO 4217). Supported: XAF, XOF, USD, EUR"
@@ -377,7 +392,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid API credentials",
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
             "content": {
               "application/json": {
                 "schema": {
@@ -396,108 +411,114 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/payments/payin": {
-  "post": {
-    "tags": ["Payments"],
-    "summary": "Initiate PayIn",
-    "description": "Collect payment from a customer via mobile money. The transaction will be processed through getmipay and funds will be credited to your merchant account upon success.\n\n**OTP Requirement:**\n- For Orange Money services (OM CI, OM SN, OM BF), OTP header is REQUIRED\n- OTP must be maximum 8 characters/digits\n- OTP is only required for these specific services",
-    "security": [
-      {
-        "ApiKeyAuth": []
-      }
-    ],
-    "parameters": [
-      {
-        "name": "operation",
-        "in": "header",
-        "description": "Operation type - must be '2' for PayIn",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "enum": ["2"],
-          "example": "2"
-        }
-      },
-      {
-        "name": "service",
-        "in": "header",
-        "description": "Service identifier for the payment method.\n\n**Services requiring OTP:**\n- `3` - OM CI (Orange Money Côte d'Ivoire)\n- `4` - OM SN (Orange Money Senegal)\n- `5` - OM BF (Orange Money Burkina Faso)",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "example": "1"
-        }
-      },
-      {
-        "name": "otp",
-        "in": "header",
-        "description": "One-Time Password for Orange Money services.\n\n**Required only for:** OM CI (service: 3), OM SN (service: 4), OM BF (service: 5)\n**Format:** Maximum 8 characters/digits\n**Note:** This header is optional for services that don't require OTP",
-        "required": false,
-        "schema": {
-          "type": "string",
-          "maxLength": 8,
-          "example": "123456"
-        }
-      }
-    ],
-    "requestBody": {
-      "description": "Payment details to collect from customer",
-      "content": {
-        "application/json": {
-          "schema": {
-            "$ref": "#/components/schemas/PayInRequest"
-          }
-        }
-      },
-      "required": true
-    },
-    "responses": {
-      "200": {
-        "description": "Payment initiated successfully",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/PayInResponse"
-            }
-          }
-        }
-      },
-      "401": {
-        "description": "Unauthorized - Invalid API credentials",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      },
-      "500": {
-        "description": "Internal server error",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      }
-    }
-  }
-},
-    "/payouts": {
       "post": {
-        "tags": ["Payouts"],
-        "summary": "Initiate PayOut",
-        "description": "Send money to a customer via mobile money. The amount will be deducted from your merchant balance immediately.",
-        "security": [
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Initiate PayIn",
+        "description": "Collect payment from a customer via mobile money. Requires Authorization: Bearer <jwt>. Also send service and operation headers. OTP is required only for OTP-required services such as OM CI, OM SN, and OM BF.",
+        "parameters": [
           {
-            "ApiKeyAuth": []
+            "name": "operation",
+            "in": "header",
+            "description": "Operation type - must be '2' for PayIn",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2"
+              ],
+              "example": "2"
+            }
+          },
+          {
+            "name": "service",
+            "in": "header",
+            "description": "Service identifier for the payment method.\n\n**Services requiring OTP:**\n- `3` - OM CI (Orange Money CÃƒÂ´te d'Ivoire)\n- `4` - OM SN (Orange Money Senegal)\n- `5` - OM BF (Orange Money Burkina Faso)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1"
+            }
+          },
+          {
+            "name": "otp",
+            "in": "header",
+            "description": "One-Time Password for Orange Money services.\n\n**Required only for:** OM CI (service: 3), OM SN (service: 4), OM BF (service: 5)\n**Format:** Maximum 8 characters/digits\n**Note:** This header is optional for services that don't require OTP",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 8,
+              "example": "123456"
+            }
           }
         ],
+        "requestBody": {
+          "description": "Payment details to collect from customer",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayInRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Payment initiated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayInResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/payouts": {
+      "post": {
+        "tags": [
+          "Payouts"
+        ],
+        "summary": "Initiate PayOut",
+        "description": "Send money to a customer via mobile money. Requires Authorization: Bearer <jwt>. Also send service and operation headers. The amount will be deducted from your merchant balance immediately.",
         "parameters": [
           {
             "name": "operation",
@@ -506,7 +527,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["4"],
+              "enum": [
+                "4"
+              ],
               "example": "4"
             }
           },
@@ -554,7 +577,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid API credentials",
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
             "content": {
               "application/json": {
                 "schema": {
@@ -563,19 +586,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/payments/{reference}": {
       "get": {
-        "tags": ["Transactions"],
+        "tags": [
+          "Transactions"
+        ],
         "summary": "Check Payment Status",
         "description": "Check the status of a PayIn transaction",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "reference",
@@ -609,19 +634,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/payouts/{reference}": {
       "get": {
-        "tags": ["Transactions"],
+        "tags": [
+          "Transactions"
+        ],
         "summary": "Check Payout Status",
         "description": "Check the status of a PayOut transaction",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "reference",
@@ -655,19 +682,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/balance": {
       "get": {
-        "tags": ["Balance"],
+        "tags": [
+          "Balance"
+        ],
         "summary": "Get Account Balance",
         "description": "Retrieve current merchant account balance",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "responses": {
           "200": {
             "description": "Balance retrieved successfully",
@@ -680,7 +709,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid API credentials",
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
             "content": {
               "application/json": {
                 "schema": {
@@ -689,26 +718,30 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/payments/check-status": {
       "post": {
-        "tags": ["Transactions"],
+        "tags": [
+          "Transactions"
+        ],
         "summary": "Manual Status Check",
         "description": "Manually check and update transaction status by polling getmipay",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "description": "Reference to check",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["reference"],
+                "required": [
+                  "reference"
+                ],
                 "properties": {
                   "reference": {
                     "type": "string",
@@ -763,19 +796,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/payments/direct-status": {
       "post": {
-        "tags": ["Transactions"],
+        "tags": [
+          "Transactions"
+        ],
         "summary": "Direct Status Check",
         "description": "Directly check transaction status with getmipay using both order ID and payment reference",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "description": "Transaction identifiers for direct status check",
           "content": {
@@ -809,7 +844,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid API credentials",
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
             "content": {
               "application/json": {
                 "schema": {
@@ -828,19 +863,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/fees": {
       "get": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Get Virtual Card Fees",
         "description": "Retrieve all active virtual card fee configurations. Fees shown are total amounts including both Soleaspay and GetMiPay fees.",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "responses": {
           "200": {
             "description": "Fees retrieved successfully",
@@ -853,7 +890,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid API credentials",
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
             "content": {
               "application/json": {
                 "schema": {
@@ -872,19 +909,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/calculate-fees": {
       "get": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Calculate Card Creation Fees",
         "description": "Calculate fees for creating a virtual card based on card grade, type, and initial balance. Returns total fees including both Soleaspay and GetMiPay fees.",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "card_grade",
@@ -892,7 +931,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["BASIC", "PREMIUM"],
+              "enum": [
+                "BASIC",
+                "PREMIUM"
+              ],
               "example": "BASIC"
             },
             "description": "Grade of the card (BASIC or PREMIUM)"
@@ -903,7 +945,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["VISA", "MASTERCARD"],
+              "enum": [
+                "VISA",
+                "MASTERCARD"
+              ],
               "example": "VISA"
             },
             "description": "Type of the card (VISA or MASTERCARD)"
@@ -916,7 +961,7 @@
               "type": "number",
               "format": "float",
               "minimum": 1,
-              "example": 100.00
+              "example": 100
             },
             "description": "Initial balance to load on the card"
           }
@@ -943,7 +988,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid API credentials",
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
             "content": {
               "application/json": {
                 "schema": {
@@ -972,19 +1017,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/action/card/user": {
       "post": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Create Card User",
         "description": "Create a new user for virtual card operations",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "requestBody": {
           "description": "User creation details",
           "content": {
@@ -1018,7 +1065,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid API credentials",
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1027,17 +1074,19 @@
               }
             }
           }
-        }
-      },
-      "get": {
-        "tags": ["Virtual Cards"],
-        "summary": "Get All Card Users",
-        "description": "Retrieve list of all virtual card users",
+        },
         "security": [
           {
-            "ApiKeyAuth": []
+            "bearerAuth": []
           }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Virtual Cards"
         ],
+        "summary": "Get All Card Users",
+        "description": "Retrieve list of all virtual card users",
         "responses": {
           "200": {
             "description": "Users retrieved successfully",
@@ -1050,7 +1099,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid API credentials",
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1059,19 +1108,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/users/{reference}": {
       "get": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Get Card User",
         "description": "Retrieve a specific virtual card user by reference",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "reference",
@@ -1105,19 +1156,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/action/card/{userId}": {
       "post": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Create Virtual Card",
         "description": "Create a new virtual card for a specific user",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "userId",
@@ -1163,7 +1216,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid API credentials",
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
             "content": {
               "application/json": {
                 "schema": {
@@ -1172,19 +1225,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/action/card/{id}": {
       "get": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Get Virtual Card",
         "description": "Retrieve virtual card details by card ID",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "id",
@@ -1218,19 +1273,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/cards/{cardId}/balance": {
       "get": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Get Card Balance",
         "description": "Retrieve the current balance of a virtual card",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "cardId",
@@ -1264,7 +1321,7 @@
                         },
                         "balance": {
                           "type": "number",
-                          "example": 50.00
+                          "example": 50
                         },
                         "currency": {
                           "type": "string",
@@ -1277,19 +1334,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/cards/{cardId}/topup": {
       "post": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Top Up Card",
         "description": "Add funds to a virtual card",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "cardId",
@@ -1308,16 +1367,23 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["amount", "currency"],
+                "required": [
+                  "amount",
+                  "currency"
+                ],
                 "properties": {
                   "amount": {
                     "type": "number",
                     "minimum": 0.01,
-                    "example": 50.00
+                    "example": 50
                   },
                   "currency": {
                     "type": "string",
-                    "enum": ["USD", "EUR", "XAF"],
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "XAF"
+                    ],
                     "example": "USD"
                   }
                 }
@@ -1337,19 +1403,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/cards/{cardId}/withdraw": {
       "post": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Withdraw from Card",
         "description": "Withdraw funds from a virtual card",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "cardId",
@@ -1368,16 +1436,23 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["amount", "currency"],
+                "required": [
+                  "amount",
+                  "currency"
+                ],
                 "properties": {
                   "amount": {
                     "type": "number",
                     "minimum": 0.01,
-                    "example": 20.00
+                    "example": 20
                   },
                   "currency": {
                     "type": "string",
-                    "enum": ["USD", "EUR", "XAF"],
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "XAF"
+                    ],
                     "example": "USD"
                   }
                 }
@@ -1397,19 +1472,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/cards/{cardId}/enable": {
       "post": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Enable Card",
         "description": "Enable a disabled virtual card",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "cardId",
@@ -1433,19 +1510,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/cards/{cardId}/disable": {
       "post": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Disable Card",
         "description": "Disable a virtual card",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "cardId",
@@ -1469,19 +1548,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/action/card/transaction/{id}": {
       "get": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Get Card Transactions",
         "description": "Retrieve transaction history for a virtual card",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "id",
@@ -1505,19 +1586,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/cards/{cardId}": {
       "delete": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Terminate Card",
         "description": "Permanently terminate a virtual card",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "cardId",
@@ -1541,19 +1624,21 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/virtual-cards/cards/{cardId}/operation": {
       "post": {
-        "tags": ["Virtual Cards"],
+        "tags": [
+          "Virtual Cards"
+        ],
         "summary": "Card Operation",
         "description": "Perform generic operations on virtual card",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
         "parameters": [
           {
             "name": "cardId",
@@ -1572,21 +1657,34 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["action"],
+                "required": [
+                  "action"
+                ],
                 "properties": {
                   "action": {
                     "type": "string",
-                    "enum": ["topup", "withdraw", "enable", "disable", "get_balance", "get_transactions"],
+                    "enum": [
+                      "topup",
+                      "withdraw",
+                      "enable",
+                      "disable",
+                      "get_balance",
+                      "get_transactions"
+                    ],
                     "example": "topup"
                   },
                   "amount": {
                     "type": "number",
                     "minimum": 0.01,
-                    "example": 50.00
+                    "example": 50
                   },
                   "currency": {
                     "type": "string",
-                    "enum": ["USD", "EUR", "XAF"],
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "XAF"
+                    ],
                     "example": "USD"
                   }
                 }
@@ -1606,7 +1704,278 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/user": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get Authenticated User",
+        "description": "Return the authenticated merchant/user associated with the current JWT bearer token.",
+        "responses": {
+          "200": {
+            "description": "Authenticated user retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/logout": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Logout",
+        "description": "Invalidate the current JWT using Tymon JWTAuth.",
+        "responses": {
+          "200": {
+            "description": "JWT invalidated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Logged out successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/virtual-cards/cards": {
+      "get": {
+        "tags": [
+          "Virtual Cards"
+        ],
+        "summary": "List Virtual Cards",
+        "description": "List virtual cards for the authenticated merchant.",
+        "responses": {
+          "200": {
+            "description": "Virtual cards retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/VirtualCard"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/virtual-cards/users/{userReference}": {
+      "put": {
+        "tags": [
+          "Virtual Cards"
+        ],
+        "summary": "Update Card User",
+        "description": "Update a virtual-card user by user reference.",
+        "parameters": [
+          {
+            "name": "userReference",
+            "in": "path",
+            "required": true,
+            "description": "Virtual-card user reference",
+            "schema": {
+              "type": "string"
+            },
+            "example": "SP6VC"
+          }
+        ],
+        "requestBody": {
+          "description": "Fields to update for the card user",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Card user updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardUserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Card user not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/virtual-cards/users/{userReference}/details": {
+      "get": {
+        "tags": [
+          "Virtual Cards"
+        ],
+        "summary": "Get Card User Details",
+        "description": "Retrieve detailed information for a virtual-card user by user reference.",
+        "parameters": [
+          {
+            "name": "userReference",
+            "in": "path",
+            "required": true,
+            "description": "Virtual-card user reference",
+            "schema": {
+              "type": "string"
+            },
+            "example": "SP6VC"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Card user details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardUserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing, invalid, or expired bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Card user not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     }
   },
@@ -1638,21 +2007,29 @@
                 "items": {
                   "type": "string"
                 },
-                "example": ["USD"]
+                "example": [
+                  "USD"
+                ]
               },
               "card_types_available": {
                 "type": "array",
                 "items": {
                   "type": "string"
                 },
-                "example": ["VISA", "MASTERCARD"]
+                "example": [
+                  "VISA",
+                  "MASTERCARD"
+                ]
               },
               "card_grades_available": {
                 "type": "array",
                 "items": {
                   "type": "string"
                 },
-                "example": ["BASIC", "PREMIUM"]
+                "example": [
+                  "BASIC",
+                  "PREMIUM"
+                ]
               },
               "timestamp": {
                 "type": "string",
@@ -1675,12 +2052,18 @@
           },
           "card_grade": {
             "type": "string",
-            "enum": ["BASIC", "PREMIUM"],
+            "enum": [
+              "BASIC",
+              "PREMIUM"
+            ],
             "example": "BASIC"
           },
           "card_type": {
             "type": "string",
-            "enum": ["VISA", "MASTERCARD"],
+            "enum": [
+              "VISA",
+              "MASTERCARD"
+            ],
             "example": "VISA"
           },
           "currency": {
@@ -1690,31 +2073,31 @@
           "creation_fee": {
             "type": "number",
             "format": "float",
-            "example": 3.50,
+            "example": 3.5,
             "description": "Total fee for creating the card"
           },
           "monthly_fee": {
             "type": "number",
             "format": "float",
-            "example": 1.30,
+            "example": 1.3,
             "description": "Total monthly maintenance fee"
           },
           "top_up_fee": {
             "type": "number",
             "format": "float",
-            "example": 1.20,
+            "example": 1.2,
             "description": "Total fee for adding funds to the card"
           },
           "withdrawal_fee": {
             "type": "number",
             "format": "float",
-            "example": 3.30,
+            "example": 3.3,
             "description": "Total fee for withdrawing from the card"
           },
           "reject_balance_fee": {
             "type": "number",
             "format": "float",
-            "example": 1.10,
+            "example": 1.1,
             "description": "Total fee for rejected balance transactions"
           },
           "funding_limits": {
@@ -1723,12 +2106,12 @@
               "min": {
                 "type": "number",
                 "format": "float",
-                "example": 2.00
+                "example": 2
               },
               "max": {
                 "type": "number",
                 "format": "float",
-                "example": 10000.00
+                "example": 10000
               },
               "currency": {
                 "type": "string",
@@ -1772,18 +2155,18 @@
               "initial_balance": {
                 "type": "number",
                 "format": "float",
-                "example": 100.00
+                "example": 100
               },
               "creation_fee": {
                 "type": "number",
                 "format": "float",
-                "example": 3.50,
+                "example": 3.5,
                 "description": "Total fee for creating the card"
               },
               "total_amount_required": {
                 "type": "number",
                 "format": "float",
-                "example": 103.50,
+                "example": 103.5,
                 "description": "Initial balance + creation fee"
               },
               "other_fees": {
@@ -1792,22 +2175,22 @@
                   "monthly_fee": {
                     "type": "number",
                     "format": "float",
-                    "example": 1.30
+                    "example": 1.3
                   },
                   "top_up_fee": {
                     "type": "number",
                     "format": "float",
-                    "example": 1.20
+                    "example": 1.2
                   },
                   "withdrawal_fee": {
                     "type": "number",
                     "format": "float",
-                    "example": 3.30
+                    "example": 3.3
                   },
                   "reject_balance_fee": {
                     "type": "number",
                     "format": "float",
-                    "example": 1.10
+                    "example": 1.1
                   }
                 }
               },
@@ -1817,12 +2200,12 @@
                   "min": {
                     "type": "number",
                     "format": "float",
-                    "example": 2.00
+                    "example": 2
                   },
                   "max": {
                     "type": "number",
                     "format": "float",
-                    "example": 10000.00
+                    "example": 10000
                   },
                   "currency": {
                     "type": "string",
@@ -1995,7 +2378,12 @@
                 "type": "string",
                 "example": "XOF",
                 "description": "The target currency code (ISO 4217)",
-                "enum": ["XAF", "XOF", "USD", "EUR"]
+                "enum": [
+                  "XAF",
+                  "XOF",
+                  "USD",
+                  "EUR"
+                ]
               }
             },
             "description": "Conversion result with the converted amount and target currency"
@@ -2003,19 +2391,28 @@
         },
         "description": "Response containing the converted amount in the target currency"
       },
-     "PayInRequest": {
+      "PayInRequest": {
         "type": "object",
-        "required": ["amount", "currency", "wallet", "description", "customer_name"],
+        "required": [
+          "amount",
+          "currency",
+          "wallet",
+          "description",
+          "customer_name"
+        ],
         "properties": {
           "amount": {
             "type": "number",
             "minimum": 100,
             "example": 1000,
-            "description": "Amount in smallest currency unit (100 XAF = 1€)"
+            "description": "Amount in smallest currency unit (100 XAF = 1Ã¢â€šÂ¬)"
           },
           "currency": {
             "type": "string",
-            "enum": ["XAF", "XOF"],
+            "enum": [
+              "XAF",
+              "XOF"
+            ],
             "default": "XAF",
             "example": "XAF"
           },
@@ -2047,9 +2444,15 @@
           }
         }
       },
-            "PayOutRequest": {
+      "PayOutRequest": {
         "type": "object",
-        "required": ["amount", "currency", "wallet", "description", "customer_name"],
+        "required": [
+          "amount",
+          "currency",
+          "wallet",
+          "description",
+          "customer_name"
+        ],
         "properties": {
           "amount": {
             "type": "number",
@@ -2058,7 +2461,11 @@
           },
           "currency": {
             "type": "string",
-            "enum": ["XAF", "USD", "EUR"],
+            "enum": [
+              "XAF",
+              "USD",
+              "EUR"
+            ],
             "default": "XAF",
             "example": "XAF"
           },
@@ -2078,85 +2485,85 @@
           }
         }
       },
-     "PayInResponse": {
-  "type": "object",
-  "properties": {
-    "success": {
-      "type": "boolean",
-      "example": true
-    },
-    "message": {
-      "type": "string",
-      "example": "Payment initiated successfully"
-    },
-    "data": {
-      "type": "object",
-      "properties": {
-        "transaction_reference": {
-          "type": "string",
-          "example": "MPAYIN_ABC123DEF456"
-        },
-        "soleaspay_reference": {
-          "type": "string",
-          "example": "MLS690d472dd7ee7B"
-        },
-        "amount": {
-          "type": "number",
-          "example": 1000
-        },
-        "fee_amount": {
-          "type": "number",
-          "example": 50,
-          "description": "Fee amount deducted"
-        },
-        "net_amount": {
-          "type": "number",
-          "example": 950,
-          "description": "Net amount credited to merchant"
-        },
-        "currency": {
-          "type": "string",
-          "example": "XAF"
-        },
-        "status": {
-          "type": "string",
-          "example": "pending"
-        },
-        "service_used": {
-          "type": "string",
-          "example": "3"
-        },
-        "service_name": {
-          "type": "string",
-          "example": "OM CI"
-        },
-        "otp_required": {
-          "type": "boolean",
-          "example": true,
-          "description": "Indicates if OTP was required for this service"
-        },
-        "payment_url": {
-          "type": "string",
-          "description": "URL to redirect customer for payment (if applicable)",
-          "example": "null"
-        },
-        "webhook_urls": {
-          "type": "object",
-          "properties": {
-            "success": {
-              "type": "string",
-              "example": "https://getmipay.com/api/webhooks/success"
-            },
-            "failure": {
-              "type": "string",
-              "example": "https://getmipay.com/api/webhooks/failure"
+      "PayInResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Payment initiated successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "transaction_reference": {
+                "type": "string",
+                "example": "MPAYIN_ABC123DEF456"
+              },
+              "soleaspay_reference": {
+                "type": "string",
+                "example": "MLS690d472dd7ee7B"
+              },
+              "amount": {
+                "type": "number",
+                "example": 1000
+              },
+              "fee_amount": {
+                "type": "number",
+                "example": 50,
+                "description": "Fee amount deducted"
+              },
+              "net_amount": {
+                "type": "number",
+                "example": 950,
+                "description": "Net amount credited to merchant"
+              },
+              "currency": {
+                "type": "string",
+                "example": "XAF"
+              },
+              "status": {
+                "type": "string",
+                "example": "pending"
+              },
+              "service_used": {
+                "type": "string",
+                "example": "3"
+              },
+              "service_name": {
+                "type": "string",
+                "example": "OM CI"
+              },
+              "otp_required": {
+                "type": "boolean",
+                "example": true,
+                "description": "Indicates if OTP was required for this service"
+              },
+              "payment_url": {
+                "type": "string",
+                "description": "URL to redirect customer for payment (if applicable)",
+                "example": "null"
+              },
+              "webhook_urls": {
+                "type": "object",
+                "properties": {
+                  "success": {
+                    "type": "string",
+                    "example": "https://getmipay.com/api/webhooks/success"
+                  },
+                  "failure": {
+                    "type": "string",
+                    "example": "https://getmipay.com/api/webhooks/failure"
+                  }
+                }
+              }
             }
           }
         }
-      }
-    }
-  }
-},
+      },
       "PayOutResponse": {
         "type": "object",
         "properties": {
@@ -2223,7 +2630,12 @@
               },
               "status": {
                 "type": "string",
-                "enum": ["pending", "success", "failed", "timeout"],
+                "enum": [
+                  "pending",
+                  "success",
+                  "failed",
+                  "timeout"
+                ],
                 "example": "success"
               },
               "description": {
@@ -2252,7 +2664,10 @@
       },
       "DirectStatusRequest": {
         "type": "object",
-        "required": ["order_id", "pay_id"],
+        "required": [
+          "order_id",
+          "pay_id"
+        ],
         "properties": {
           "order_id": {
             "type": "string",
@@ -2296,7 +2711,12 @@
               },
               "status": {
                 "type": "string",
-                "enum": ["pending", "success", "failed", "processing"],
+                "enum": [
+                  "pending",
+                  "success",
+                  "failed",
+                  "processing"
+                ],
                 "example": "success"
               },
               "amount": {
@@ -2354,17 +2774,30 @@
             "properties": {
               "token": {
                 "type": "string",
-                "description": "Authentication token for virtual card operations",
-                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                "description": "Tymon JWT bearer token for protected API operations",
+                "example": "JWT_TOKEN_HERE"
               },
               "expires_at": {
                 "type": "string",
                 "format": "date-time",
-                "example": "2024-12-16T12:00:00Z"
+                "example": "2026-05-21T23:59:59Z"
+              },
+              "token_type": {
+                "type": "string",
+                "example": "bearer"
+              },
+              "token_format": {
+                "type": "string",
+                "example": "JWT"
               }
             }
+          },
+          "message": {
+            "type": "string",
+            "example": "Authentication successful"
           }
-        }
+        },
+        "description": "JWT authentication response. Use data.token as a bearer token for protected API requests. Token lifetime is 24 hours."
       },
       "CardUserRequest": {
         "type": "object",
@@ -2424,7 +2857,10 @@
             "example": false
           },
           "business_name": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "example": null
           },
           "billing_address": {
@@ -2514,7 +2950,10 @@
                 "example": false
               },
               "business_name": {
-                "type": ["string", "null"],
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "example": null
               },
               "billing_address": {
@@ -2523,7 +2962,7 @@
               },
               "billing_city": {
                 "type": "string",
-                "example": "Yaoundé"
+                "example": "YaoundÃƒÂ©"
               },
               "billing_country": {
                 "type": "string",
@@ -2585,7 +3024,13 @@
       },
       "VirtualCardRequest": {
         "type": "object",
-        "required": ["balance", "currency", "card_type", "category", "grade"],
+        "required": [
+          "balance",
+          "currency",
+          "card_type",
+          "category",
+          "grade"
+        ],
         "properties": {
           "balance": {
             "type": "number",
@@ -2594,22 +3039,35 @@
           },
           "currency": {
             "type": "string",
-            "enum": ["USD", "EUR", "XAF"],
+            "enum": [
+              "USD",
+              "EUR",
+              "XAF"
+            ],
             "example": "USD"
           },
           "card_type": {
             "type": "string",
-            "enum": ["VISA", "MASTERCARD"],
+            "enum": [
+              "VISA",
+              "MASTERCARD"
+            ],
             "example": "VISA"
           },
           "category": {
             "type": "string",
-            "enum": ["PERSONAL", "BUSINESS"],
+            "enum": [
+              "PERSONAL",
+              "BUSINESS"
+            ],
             "example": "PERSONAL"
           },
           "grade": {
             "type": "string",
-            "enum": ["BASIC", "PREMIUM"],
+            "enum": [
+              "BASIC",
+              "PREMIUM"
+            ],
             "example": "BASIC"
           }
         }
@@ -2794,7 +3252,12 @@
           },
           "status": {
             "type": "string",
-            "enum": ["pending", "success", "failed", "processing"],
+            "enum": [
+              "pending",
+              "success",
+              "failed",
+              "processing"
+            ],
             "example": "success"
           },
           "amount": {
@@ -2844,10 +3307,11 @@
       }
     },
     "securitySchemes": {
-      "ApiKeyAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-API-KEY"
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT bearer token returned by POST /action/auth. Send protected requests with: Authorization: Bearer <jwt>. Tokens expire after 24 hours."
       }
     }
   }

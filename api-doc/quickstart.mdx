@@ -65,3 +65,58 @@ Before you begin, make sure you have:
 # 3. Upload required documents
 # 4. Submit for review
 # 5. Wait for approval (24-48 hours)
+```
+
+### Step 3: Authenticate With API Keys
+
+Use your public and private API keys once to create a JWT bearer token.
+
+```bash
+curl -X POST "https://getmipay.com/api/v1/action/auth" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "public_apikey": "gmp_pk_...",
+    "private_secretkey": "gmp_sk_..."
+  }'
+```
+
+The response contains a Tymon JWT that expires after 24 hours.
+
+```json
+{
+  "success": true,
+  "message": "Authentication successful",
+  "data": {
+    "token": "JWT_TOKEN_HERE",
+    "token_type": "bearer",
+    "token_format": "JWT",
+    "expires_at": "2026-05-21T23:59:59Z"
+  }
+}
+```
+
+### Step 4: Call Protected APIs
+
+For protected API requests, send only the JWT bearer token in the `Authorization` header.
+
+```bash
+curl "https://getmipay.com/api/v1/convert-currency?amount=10000&from=XAF&to=XOF" \
+  -H "Authorization: Bearer JWT_TOKEN_HERE"
+```
+
+PayIn requests also require `service` and `operation` headers. Add `otp` only for services that require OTP.
+
+```bash
+curl -X POST "https://getmipay.com/api/v1/payments/payin" \
+  -H "Authorization: Bearer JWT_TOKEN_HERE" \
+  -H "Content-Type: application/json" \
+  -H "service: 1" \
+  -H "operation: 2" \
+  -d '{
+    "amount": 1000,
+    "phone": "237600000000",
+    "order_id": "ORDER-1001"
+  }'
+```
+
+PayOut requests use `operation: 4`.
