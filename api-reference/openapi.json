@@ -15,10 +15,6 @@
   },
   "servers": [
     {
-      "url": "https://api.getmipay.com/api/v1",
-      "description": "Production server"
-    },
-    {
       "url": "https://sandbox.getmipay.com/api",
       "description": "Sandbox server"
     }
