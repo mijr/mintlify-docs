@@ -1,0 +1,27 @@
+---
+title: "GetMiPay API v3"
+description: "Country wallets, settlement states, merchant access control, teams, settlements, and provider synchronization."
+---
+
+# GetMiPay v3
+
+Version 3 introduces country-specific merchant wallets and transaction references with explicit payment purpose codes.
+
+Every country wallet uses `available`, `pending`, and `locked` balances. PayIn amounts enter pending during provider processing and move to available after a verified success. PayOut amounts move from available to locked before submission; provider success consumes the locked amount, while provider failure releases it back to available.
+
+Country and service catalog synchronization uses the configured MySoleas identity and gateway credentials. Merchant country access creates its wallet immediately. Provider service availability can still depend on MySoleas account configuration.
+
+Generated operation references use a `GMP` prefix and operation suffix: `COL` for collections, `PAY` for payment links, `WIT` for withdrawals, `RFD` for refunds, `STL` for settlements, and `RCN` for wallet reconciliation or conversion.
+
+## Supported country wallets
+
+| Country | Currency |
+| --- | --- |
+| Cameroon | XAF |
+| Togo | XOF |
+| Benin | XOF |
+| Burkina Faso | XOF |
+| Cote d'Ivoire | XOF |
+| Senegal | XOF |
+
+See [wallet behavior](/v3/wallets), [merchant security](/v3/security), and [teams and settlements](/v3/team-and-settlements).

@@ -1,0 +1,20 @@
+---
+title: "Country wallets"
+description: "Wallet balances and country access in GetMiPay v3."
+---
+
+# Country wallets
+
+Each wallet is identified by merchant, country, and settlement currency. Country wallet access is created immediately from the merchant dashboard without administrator approval.
+
+## Balance states
+
+| State | Meaning |
+| --- | --- |
+| `available` | Funds available for merchant operations. |
+| `pending` | Funds awaiting final provider confirmation. |
+| `locked` | Funds reserved for a payout awaiting provider outcome. |
+
+Verified successful collections credit the country and currency returned by the selected merchant service. Failed collections release pending funds. Payout submission locks the payout amount and fee; provider success settles the lock, and provider rejection or failure refunds it to available balance with a linked transaction record.
+
+Country access uses `POST /api/v1/merchant/wallets/countries` with `{ "country_code": "TG" }`. Wallet balances are returned by `GET /api/v1/merchant/wallets`.
