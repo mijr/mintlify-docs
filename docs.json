@@ -10,15 +10,7 @@
   "favicon": "/logo.png",
   "navigation": {
     "tabs": [
-      {
-        "tab": "Version 3",
-        "groups": [
-          {
-            "group": "Merchant Wallets v3",
-            "pages": ["v3/index", "v3/wallets", "v3/security", "v3/team-and-settlements"]
-          }
-        ]
-      },
+     
       {
         "tab": "API docs",
         "groups": [
